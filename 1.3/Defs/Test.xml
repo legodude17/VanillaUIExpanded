@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Defs>
+    <!-- <VUIE.BuildableGroupDef>
+        <defName>UI_Beds</defName>
+        <label>beds</label>
+        <defs>
+            <li>Bed</li>
+            <li>DoubleBed</li>
+            <li>RoyalBed</li>
+            <li>Bedroll</li>
+            <li>BedrollDouble</li>
+            <li>HospitalBed</li>
+        </defs>
+        <category>Furniture</category>
+    </VUIE.BuildableGroupDef>
+    <VUIE.BuildableGroupDef>
+        <defName>UI_Tables</defName>
+        <label>tables</label>
+        <defs>
+            <li>Table1x2c</li>
+            <li>Table2x2c</li>
+            <li>Table2x4c</li>
+            <li>Table3x3c</li>
+        </defs>
+        <category>Furniture</category>
+    </VUIE.BuildableGroupDef>
+    <VUIE.BuildableGroupDef>
+        <defName>UI_Lights</defName>
+        <label>lights</label>
+        <defs>
+            <li>TorchLamp</li>
+            <li>StandingLamp</li>
+            <li>StandingLamp_Red</li>
+            <li>StandingLamp_Green</li>
+            <li>StandingLamp_Blue</li>
+            <li>SunLamp</li>
+            <li>Darklamp</li>
+            <li>Darktorch</li>
+            <li>DarktorchFungus</li>
+        </defs>
+        <category>Furniture</category>
+    </VUIE.BuildableGroupDef>
+    <VUIE.BuildableGroupDef>
+        <defName>UI_Generators</defName>
+        <label>generators</label>
+        <defs>
+            <li>WoodFiredGenerator</li>
+            <li>ChemfuelPoweredGenerator</li>
+            <li>WindTurbine</li>
+            <li>SolarGenerator</li>
+            <li>GeothermalGenerator</li>
+            <li>WatermillGenerator</li>
+        </defs>
+        <category>Power</category>
+    </VUIE.BuildableGroupDef> -->
+</Defs>
