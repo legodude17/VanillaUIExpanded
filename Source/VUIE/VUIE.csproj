@@ -52,8 +52,8 @@
       <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    <Reference Include="UnityEngine.IMGUIModule_publicized">
+      <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\publicized_assemblies\UnityEngine.IMGUIModule_publicized.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
@@ -66,10 +66,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchitectLoadSaver.cs" />
     <Compile Include="ArchitectModule.cs" />
+    <Compile Include="CommandGroup.cs" />
+    <Compile Include="Designator_Group.cs" />
     <Compile Include="Dialog_ConfigureArchitect.cs" />
     <Compile Include="Dialog_FloatMenuOptions.cs" />
-    <Compile Include="Dialog_TexttEntry.cs" />
+    <Compile Include="Dialog_TextEntry.cs" />
     <Compile Include="DragDropManager.cs" />
     <Compile Include="FloatMenuModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
