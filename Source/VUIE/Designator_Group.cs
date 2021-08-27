@@ -11,6 +11,7 @@ namespace VUIE
     public class Designator_Group : Designator, ICustomCommandMatch
     {
         internal readonly string label;
+        private readonly ArchitectModule module = UIMod.GetModule<ArchitectModule>();
         public int Columns;
         private List<(Designator, Rect)> display;
         public List<Designator> Elements;
@@ -20,6 +21,14 @@ namespace VUIE
         {
             Elements = inGroup;
             label = str;
+            var des = inGroup.First();
+            if (module.GroupDisplay == ArchitectModule.GroupDisplayType.Vanilla) Active = des;
+            icon = des.icon;
+            iconDrawScale = des.iconDrawScale;
+            iconProportions = des.iconProportions;
+            iconTexCoords = des.iconTexCoords;
+            iconAngle = des.iconAngle;
+            iconOffset = des.iconOffset;
         }
 
         public Designator Active { get; private set; }
@@ -31,9 +40,11 @@ namespace VUIE
 
         public override float PanelReadoutTitleExtraRightMargin => Active?.PanelReadoutTitleExtraRightMargin ?? 0f;
 
-        public override bool Visible => Elements.Any(d => d.Visible);
+        public override bool Visible => VisibleElements.Any();
         public override string Label => Active?.Label ?? label.CapitalizeFirst();
         public override string Desc => Active?.Desc ?? Elements.Where(elm => elm.Visible).Select(elm => elm.Label).ToLineList("  - ", true);
+
+        public IEnumerable<Designator> VisibleElements => Elements.Where(elm => elm.Visible);
 
         public bool Matches(QuickSearchFilter filter)
         {
@@ -60,9 +71,22 @@ namespace VUIE
                 var size = GizmoDrawer.GizmoAreaSize(Elements.Where(elm => elm.Visible).Cast<Gizmo>().ToList(), true, Columns);
                 var rect = new Rect(new Vector2(lastTopLeft.x, lastTopLeft.y - size.y), size);
                 Find.WindowStack.ImmediateWindow((int) Elements.Average(elm => elm.GetHashCode()), rect, WindowLayer.Super, () => GizmoDrawer.DrawGizmos(
-                    Elements.Where(elm => elm.Visible),
-                    new Rect(Vector2.zero, size).ContractedBy(GizmoGridDrawer.GizmoSpacing.x), true,
-                    null, command => ArchitectModule.overrideMouseOverGizmo = command,
+                    Elements, new Rect(Vector2.zero, size).ContractedBy(GizmoGridDrawer.GizmoSpacing.x), true,
+                    (gizmo, _) =>
+                    {
+                        if (module.GroupDisplay == ArchitectModule.GroupDisplayType.Vanilla && gizmo is Designator des)
+                        {
+                            Active = des;
+                            icon = des.icon;
+                            iconDrawScale = des.iconDrawScale;
+                            iconProportions = des.iconProportions;
+                            iconTexCoords = des.iconTexCoords;
+                            iconAngle = des.iconAngle;
+                            iconOffset = des.iconOffset;
+                        }
+
+                        return false;
+                    }, command => ArchitectModule.overrideMouseOverGizmo = command,
                     ArchitectModule.CurrentTab.shouldHighLightGizmoFunc,
                     ArchitectModule.CurrentTab.shouldLowLightGizmoFunc, false));
             }
@@ -73,14 +97,22 @@ namespace VUIE
 
         public override void DrawIcon(Rect rect, Material buttonMat, GizmoRenderParms parms)
         {
-            rect.position += new Vector2(iconOffset.x * rect.size.x, iconOffset.y * rect.size.y);
-            if (!disabled || parms.lowLight)
-                GUI.color = IconDrawColor;
-            else
-                GUI.color = IconDrawColor.SaturationChanged(0f);
+            if (module.GroupDisplay == ArchitectModule.GroupDisplayType.Vanilla)
+            {
+                if (Active is not null) Active.DrawIcon(rect, buttonMat, parms);
+                else base.DrawIcon(rect, buttonMat, parms);
+                return;
+            }
 
-            display = Elements.Where(elm => elm.Visible).Take(16)
-                .Zip(GizmoDrawer.DivideIntoGrid(rect, Math.Min(Elements.Count, 16)).ToList(), (designator, rect1) => (designator, rect1)).ToList();
+            var gizmos = VisibleElements.ToList();
+            rect.position += new Vector2(iconOffset.x * rect.size.x, iconOffset.y * rect.size.y);
+            GUI.color = !disabled || parms.lowLight ? IconDrawColor : IconDrawColor.SaturationChanged(0f);
+            var grid = (module.GroupDisplay == ArchitectModule.GroupDisplayType.SquareGrid
+                ? GizmoDrawer.DivideIntoGrid(rect, Math.Min(gizmos.Count, (int) Math.Pow(module.MaxSize, 2)))
+                : GizmoDrawer.DivideIntoGrid(rect, gizmos.Count, Mathf.Min(module.MaxSize, Mathf.CeilToInt(gizmos.Count / 2f)), 2)).ToList();
+            Log.Message("Grid:");
+            GenDebug.LogList(grid);
+            display = gizmos.Zip(grid, (designator, rect1) => (designator, rect1)).ToList();
             Active = display?.FirstOrDefault(tuple => Mouse.IsOver(tuple.Item2)).Item1;
 
             if (parms.lowLight) GUI.color = GUI.color.ToTransparent(0.6f);
@@ -90,10 +122,14 @@ namespace VUIE
             GUI.color = Color.white;
         }
 
-        public override AcceptanceReport CanDesignateCell(IntVec3 loc)
+        public override float GetWidth(float maxWidth)
         {
-            return Active?.CanDesignateCell(loc) ?? false;
+            if (module.GroupDisplay == ArchitectModule.GroupDisplayType.ExpandGrid)
+                return Mathf.Min(module.MaxSize, Mathf.CeilToInt(VisibleElements.Count() / 2f)) * (Height - 1f) / 2f;
+            return base.GetWidth(maxWidth);
         }
+
+        public override AcceptanceReport CanDesignateCell(IntVec3 loc) => Active?.CanDesignateCell(loc) ?? false;
 
         public override void DrawMouseAttachments()
         {
@@ -107,7 +143,7 @@ namespace VUIE
 
         public override void ProcessInput(Event ev)
         {
-            if (ev.button == 0 && Active != null) Active.ProcessInput(ev);
+            if (ev.button == 0 && Active != null && !module.GroupOpenLeft) Active.ProcessInput(ev);
             else OpenMenu();
         }
 
@@ -115,8 +151,20 @@ namespace VUIE
         {
             if (Find.WindowStack.windows.Any(window => window is CommandGroup group && group.Anchor == lastTopLeft) && !closeOthers) return;
             if (closeOthers) Find.WindowStack.windows.Where(window => window is CommandGroup group && group.Anchor == lastTopLeft).Do(window => window.Close(false));
-            Find.WindowStack.Add(new CommandGroup(Elements.Where(elm => elm.Visible).Cast<Command>().ToList(), lastTopLeft,
-                command => ArchitectModule.overrideMouseOverGizmo = command, null,
+            Find.WindowStack.Add(new CommandGroup(Elements.Cast<Command>().ToList(), lastTopLeft,
+                command => ArchitectModule.overrideMouseOverGizmo = command, command =>
+                {
+                    if (module.GroupDisplay == ArchitectModule.GroupDisplayType.Vanilla)
+                    {
+                        Active = command as Designator;
+                        icon = command.icon;
+                        iconDrawScale = command.iconDrawScale;
+                        iconProportions = command.iconProportions;
+                        iconTexCoords = command.iconTexCoords;
+                        iconAngle = command.iconAngle;
+                        iconOffset = command.iconOffset;
+                    }
+                },
                 ArchitectModule.CurrentTab.shouldHighLightGizmoFunc, ArchitectModule.CurrentTab.shouldLowLightGizmoFunc, shouldClose)
             {
                 vanishIfMouseDistant = vanish,

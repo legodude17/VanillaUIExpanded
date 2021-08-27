@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using RimWorld;
@@ -10,11 +11,23 @@ namespace VUIE
     [StaticConstructorOnStartup]
     public class ArchitectModule : Module
     {
+        public enum GroupDisplayType
+        {
+            SquareGrid,
+            ExpandGrid,
+            Vanilla
+        }
+
         public static ArchitectCategoryTab CurrentTab;
 
         public static Gizmo overrideMouseOverGizmo;
         public static bool DoDesInit = true;
         public int ActiveIndex = -1;
+        private string buffer;
+
+        public GroupDisplayType GroupDisplay = GroupDisplayType.SquareGrid;
+        public bool GroupOpenLeft;
+        public int MaxSize = 4;
         public List<ArchitectSaved> SavedStates = new List<ArchitectSaved>();
         public int VanillaIndex = -1;
 
@@ -54,15 +67,47 @@ namespace VUIE
             listing.Begin(inRect);
             if (listing.ButtonText("Open Architect Configuration Dialog")) Find.WindowStack.Add(new Dialog_ConfigureArchitect());
             listing.GapLine();
+            listing.Label("Group Display Type:");
+            listing.Indent();
+            listing.ColumnWidth -= 12f;
+            if (listing.RadioButton("Square Grid", GroupDisplay == GroupDisplayType.SquareGrid, 0f, "Keep normal gizmo size, display a small grid of options"))
+                GroupDisplay = GroupDisplayType.SquareGrid;
+            if (listing.RadioButton("Expanding Grid", GroupDisplay == GroupDisplayType.ExpandGrid, 0f, "Keep grid with a max height of 2, expand width to fit"))
+                GroupDisplay = GroupDisplayType.ExpandGrid;
+            if (listing.RadioButton("Vanilla", GroupDisplay == GroupDisplayType.Vanilla, 0f, "Display last used gizmo icon"))
+                GroupDisplay = GroupDisplayType.Vanilla;
+            listing.Gap(6f);
+            switch (GroupDisplay)
+            {
+                case GroupDisplayType.SquareGrid:
+                    listing.TextFieldNumericLabeled("Maximum grid depth", ref MaxSize, ref buffer, 2, 4);
+                    break;
+                case GroupDisplayType.ExpandGrid:
+                    listing.TextFieldNumericLabeled("Maximum grid width", ref MaxSize, ref buffer, 1, 10);
+                    break;
+                case GroupDisplayType.Vanilla:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            listing.ColumnWidth += 12f;
+            listing.Outdent();
+            listing.Gap(6f);
+            listing.CheckboxLabeled("Left click open menu", ref GroupOpenLeft, "Open selection menu on left click, by default selects the current mousedover item");
+            listing.GapLine();
             listing.Label("Architect Configurations:");
             foreach (var state in SavedStates.ToList())
             {
                 var rect = listing.GetRect(30f);
                 var row = new WidgetRow(rect.x, rect.y, UIDirection.RightThenDown);
                 row.Label(state.Name);
-                row.Gap(3f);
-                row.Label("Is Vanilla:");
+                row.Gap(50f);
+                row.Label("Vanilla:");
                 row.Icon(state.Vanilla ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
+                row.Gap(12f);
+                row.Label("Active:");
+                row.Icon(SavedStates.IndexOf(state) == ActiveIndex ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
                 row.Gap(12f);
                 if (row.ButtonText("Set Active"))
                 {
@@ -86,11 +131,12 @@ namespace VUIE
             Scribe_Values.Look(ref VanillaIndex, "vanilla", -1);
             Scribe_Values.Look(ref ActiveIndex, "active", -1);
             Scribe_Collections.Look(ref SavedStates, "states", LookMode.Deep);
+            Scribe_Values.Look(ref GroupDisplay, "displayType");
+            Scribe_Values.Look(ref GroupOpenLeft, "openOnLeft");
         }
 
         public override void DoPatches(Harmony harm)
         {
-            harm.Patch(AccessTools.Method(typeof(DesignationCategoryDef), "ResolveDesignators"), postfix: new HarmonyMethod(typeof(ArchitectModule), nameof(FixDesig)));
             harm.Patch(AccessTools.Method(typeof(ArchitectCategoryTab), nameof(ArchitectCategoryTab.DesignationTabOnGUI)),
                 new HarmonyMethod(typeof(ArchitectModule), nameof(UpdateCurrentTab)));
             harm.Patch(AccessTools.Method(typeof(ArchitectCategoryTab), "Matches"), new HarmonyMethod(typeof(ArchitectModule), nameof(CustomMatch)));
@@ -98,7 +144,7 @@ namespace VUIE
             harm.Patch(AccessTools.Method(typeof(GizmoGridDrawer), nameof(GizmoGridDrawer.DrawGizmoGrid)),
                 postfix: new HarmonyMethod(typeof(ArchitectModule), nameof(OverrideMouseOverGizmo)));
             harm.Patch(AccessTools.Method(typeof(DesignationCategoryDef), nameof(DesignationCategoryDef.ResolveDesignators)),
-                new HarmonyMethod(typeof(ArchitectModule), nameof(SkipDesInit)));
+                new HarmonyMethod(typeof(ArchitectModule), nameof(SkipDesInit)), new HarmonyMethod(typeof(ArchitectModule), nameof(FixDesig)));
         }
 
         public static bool SkipDesInit()
@@ -134,76 +180,25 @@ namespace VUIE
 
         public static void FixDesig(DesignationCategoryDef __instance)
         {
-            foreach (var def in DefDatabase<BuildableGroupDef>.AllDefs) def.RemoveChildren(__instance);
-            // var def = new BuildableGroupDef
-            // {
-            //     defName = __instance.defName,
-            //     label = __instance.label,
-            //     defs = __instance.AllResolvedDesignators.OfType<Designator_Build>().Select(d => d.entDef).ToList(),
-            //     category = __instance
-            // };
-            // def.RemoveChildren(__instance);
-        }
-    }
-
-    public class BuildableGroupDef : Def
-    {
-        public DesignationCategoryDef category;
-        public int columns;
-        public List<BuildableDef> defs;
-        private Designator_Group designatorGroup;
-        public int rows;
-        public bool scroll;
-
-        public override IEnumerable<string> ConfigErrors()
-        {
-            foreach (var er in base.ConfigErrors()) yield return er;
-
-            if (defs.NullOrEmpty()) yield return "Must provide defs";
-            if (category == null) yield return "Must provide category";
-            if (!scroll && rows > 0) yield return "Only provide rows when scrollable";
-        }
-
-        public void RemoveChildren(DesignationCategoryDef def)
-        {
-            var inGroup = new List<Designator>();
-            foreach (var designator in def.AllResolvedDesignators.ToList())
-                switch (designator)
+            var me = UIMod.GetModule<ArchitectModule>();
+            foreach (var def in DefDatabase<BuildableGroupDef>.AllDefs)
+            {
+                if (def.presetName.NullOrEmpty())
                 {
-                    case Designator_Build build when defs.Contains(build.entDef) || defName == "Everything":
-                    {
-                        inGroup.Add(designator);
-                        def.AllResolvedDesignators.Remove(designator);
-                        break;
-                    }
-                    case Designator_Dropdown dropdown:
-                    {
-                        foreach (var element in dropdown.Elements.OfType<Designator_Build>().Where(build2 => defs.Contains(build2.entDef) || defName == "Everything").ToList())
-                        {
-                            inGroup.Add(element);
-                            dropdown.Elements.Remove(element);
-                        }
-
-                        if (dropdown.Elements.Count == 0) def.AllResolvedDesignators.Remove(designator);
-
-
-                        break;
-                    }
+                    def.RemoveChildren(__instance);
+                    continue;
                 }
 
-            if (!inGroup.Any()) return;
-
-            if (designatorGroup == null)
-            {
-                designatorGroup = new Designator_Group(inGroup, label)
+                var index = me.SavedStates.FindIndex(state => state.Name == def.presetName);
+                if (index == -1)
                 {
-                    Columns = columns
-                };
-                category.resolvedDesignators.Add(designatorGroup);
-            }
-            else
-            {
-                designatorGroup.Elements.AddRange(inGroup);
+                    index = me.SavedStates.Count;
+                    me.SavedStates.Add(ArchitectLoadSaver.SaveState(def.presetName));
+                }
+
+                ArchitectLoadSaver.RestoreState(me.SavedStates[index]);
+                def.RemoveChildren(__instance);
+                me.SavedStates[index] = ArchitectLoadSaver.SaveState(def.presetName);
             }
         }
     }

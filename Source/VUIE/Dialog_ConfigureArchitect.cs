@@ -7,31 +7,42 @@ using Verse;
 
 namespace VUIE
 {
-    /* TODO:
-    *   - Make changes persist across game loads
-    *   - Allow moving of designations out of folders and into and out of dropdowns DONE!
-    *   - Allow the user to add new designations, both of the special type, and for building buildings
-    */
     public class Dialog_ConfigureArchitect : Window
     {
+        private readonly List<Designator> available = new();
+        private readonly QuickSearchWidget availableSearch;
         private readonly DragDropManager<Designator> dragDropManager;
 
-        private readonly List<Designator> unassigned = new List<Designator>();
+        private readonly List<Designator> unassigned = new();
+        private int curAvailablePage;
+
+        private int curUnassignedPage;
 
         private Designator selected;
         private ArchitectCategoryTab selectedCategoryTab;
 
+        private bool setPageWhileSearching;
+
         private Vector2 tabListScrollPos = Vector2.zero;
-        // private Vector2 unassignedScrollPos = Vector2.zero;
 
         public Dialog_ConfigureArchitect()
         {
             doCloseButton = true;
             doCloseX = false;
             dragDropManager = new DragDropManager<Designator>(DrawDragged);
+            availableSearch = new QuickSearchWidget();
+            foreach (var type in typeof(Designator).AllSubclassesNonAbstract()
+                .Where(type => type != typeof(Designator_Dropdown) && type != typeof(Designator_Group) && !typeof(Designator_Install).IsAssignableFrom(type)))
+                if (type == typeof(Designator_Build))
+                    foreach (var def in DefDatabase<ThingDef>.AllDefs
+                        .Concat<BuildableDef>(DefDatabase<TerrainDef>.AllDefs)
+                        .Where(d => d.canGenerateDefaultDesignator && d.designationCategory != null))
+                        available.Add(new Designator_Build(def));
+                else
+                    available.Add((Designator) Activator.CreateInstance(type));
         }
 
-        public override Vector2 InitialSize => new Vector2(UI.screenWidth - 100f, UI.screenHeight - 100f);
+        public override Vector2 InitialSize => new(UI.screenWidth - 100f, UI.screenHeight - 100f);
 
         public static List<ArchitectCategoryTab> ArchitectCategoryTabs => ((MainTabWindow_Architect) MainButtonDefOf.Architect.TabWindow).desPanelsCached;
 
@@ -46,9 +57,7 @@ namespace VUIE
                 module.SavedStates.Add(state);
             }
             else
-            {
                 module.SavedStates[module.ActiveIndex] = ArchitectLoadSaver.SaveState(module.SavedStates[module.ActiveIndex].Name);
-            }
         }
 
         private static void DrawDragged(Designator dragee, Vector2 topLeft)
@@ -128,42 +137,48 @@ namespace VUIE
                 }
             }
 
-            DoUnassignedList(inRect.ContractedBy(7f));
+            DoUnassignedList(inRect.TopHalf().ContractedBy(7f));
+            DoAvailable(inRect.BottomHalf().ContractedBy(7f));
             dragDropManager.DragDropOnGUI(des => unassigned.Add(des));
+        }
+
+        private void DoAvailable(Rect inRect)
+        {
+            var controlsRect = inRect.TopPartPixels(35f);
+            inRect.yMin += 40f;
+            Widgets.DrawMenuSection(inRect);
+            if (!availableSearch.filter.Active) setPageWhileSearching = false;
+            var oldPage = curAvailablePage;
+            GizmoDrawer.DrawGizmosWithPages(available, ref curAvailablePage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) => true,
+                drawExtras: (giz, rect) =>
+                {
+                    if (giz is Designator des && dragDropManager.TryStartDrag(des, rect))
+                    {
+                        if (giz is Designator_Build build)
+                            available[available.IndexOf(des)] = new Designator_Build(build.entDef);
+                        else available[available.IndexOf(des)] = (Designator) Activator.CreateInstance(des.GetType());
+                    }
+                }, useHotkeys: false, searchWidget: availableSearch, jump: !setPageWhileSearching);
+            if (oldPage != curAvailablePage && availableSearch.filter.Active) setPageWhileSearching = true;
+            if (dragDropManager.DraggingNow) TooltipHandler.TipRegion(inRect, "Drop to Delete");
+            dragDropManager.DropLocation(inRect, des => Widgets.DrawHighlight(inRect), des => true);
         }
 
         private void DoUnassignedList(Rect inRect)
         {
-            var addRect = inRect.BottomPartPixels(30f);
-            inRect.yMax += 50f;
-            // var viewRect = new Rect(0, 0, inRect.width - 20f, unassigned.Count * (Gizmo.Height + GizmoGridDrawer.GizmoSpacing.y));
-            // Widgets.BeginScrollView(inRect, ref unassignedScrollPos, viewRect);
-            GizmoDrawer.DrawGizmos(unassigned, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), false, (giz, topLeft) => true, drawExtras: (giz, rect) =>
-            {
-                if (dragDropManager.TryStartDrag(giz as Designator, rect)) unassigned.Remove(giz as Designator);
-            }, useHotkeys: false);
-            // Widgets.EndScrollView();
+            var controlsRect = inRect.TopPartPixels(35f);
+            inRect.yMin += 40f;
+            Widgets.DrawMenuSection(inRect);
+            GizmoDrawer.DrawGizmosWithPages(unassigned, ref curUnassignedPage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) => true,
+                drawExtras: (giz, rect) =>
+                {
+                    if (dragDropManager.TryStartDrag(giz as Designator, rect)) unassigned.Remove(giz as Designator);
+                }, useHotkeys: false);
             dragDropManager.DropLocation(inRect, des => Widgets.DrawHighlight(inRect), des =>
             {
                 unassigned.Add(des);
                 return true;
             });
-
-            if (Widgets.ButtonText(addRect, "Add"))
-            {
-                var opts = new List<FloatMenuOption>();
-                foreach (var type in typeof(Designator).AllSubclassesNonAbstract()
-                    .Where(type => type != typeof(Designator_Dropdown) && type != typeof(Designator_Group) && !typeof(Designator_Install).IsAssignableFrom(type)))
-                    if (type == typeof(Designator_Build))
-                        opts.Add(new FloatMenuOption("Build", () => Find.WindowStack.Add(new FloatMenu(DefDatabase<ThingDef>.AllDefs
-                            .Concat<BuildableDef>(DefDatabase<TerrainDef>.AllDefs)
-                            .Where(d => d.canGenerateDefaultDesignator && (d.designationCategory != null || !d.CostList.NullOrEmpty()))
-                            .Select(def => new FloatMenuOption(def.label, () => unassigned.Add(new Designator_Build(def)), def as ThingDef)).ToList()))));
-                    else
-                        opts.Add(new FloatMenuOption(type.Name, () => unassigned.Add((Designator) Activator.CreateInstance(type))));
-
-                Find.WindowStack.Add(new FloatMenu(opts));
-            }
         }
 
         private void DoArchitectTabList(Rect inRect)

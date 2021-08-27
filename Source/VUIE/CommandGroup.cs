@@ -47,9 +47,8 @@ namespace VUIE
             if (closeFunc()) Close(false);
             GizmoDrawer.DrawGizmos(elements, inRect, true, (gizmo, topLeft) =>
             {
-                if (!Event.current.control) return false;
                 onChosen((Command) gizmo);
-                return true;
+                return false;
             }, gizmo => onMouseOver((Command) gizmo), gizmo => highlightFunc((Command) gizmo), gizmo => lowlightFunc((Command) gizmo), false);
         }
 

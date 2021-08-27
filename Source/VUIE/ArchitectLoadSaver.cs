@@ -33,8 +33,12 @@ namespace VUIE
                 };
                 ArchitectModule.DoDesInit = true;
                 def.ResolveDesignators();
-                def.AllResolvedDesignators.Clear();
-                def.AllResolvedDesignators.AddRange(tab.Designators.Select(DesignatorSaved.Load));
+                if (tab.Designators != null)
+                {
+                    def.AllResolvedDesignators.Clear();
+                    def.AllResolvedDesignators.AddRange(tab.Designators.Select(DesignatorSaved.Load));
+                }
+
                 var desTab = new ArchitectCategoryTab(def, Architect.quickSearchWidget.filter);
                 Architect.desPanelsCached.Add(desTab);
             }
