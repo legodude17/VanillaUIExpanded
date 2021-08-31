@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <VUIE.Vanilla>Vanilla</VUIE.Vanilla>
+    <VUIE.Architect>Architect Menu</VUIE.Architect>
+    <VUIE.Archicect.Open>Open Architect Configuration Dialog</VUIE.Archicect.Open>
+    <VUIE.Archicect.GroupDisplay>Group Display Type</VUIE.Archicect.GroupDisplay>
+    <VUIE.Archicect.GroupDisplay.SquareGrid>Square Grid</VUIE.Archicect.GroupDisplay.SquareGrid>
+    <VUIE.Archicect.GroupDisplay.SquareGrid.Desc>Keep normal gizmo size, display a small grid of options</VUIE.Archicect.GroupDisplay.SquareGrid.Desc>
+    <VUIE.Archicect.GroupDisplay.ExpandGrid>Expanding Grid</VUIE.Archicect.GroupDisplay.ExpandGrid>
+    <VUIE.Archicect.GroupDisplay.ExpandGrid.Desc>Keep grid with a max height of 2, expand width to fit</VUIE.Archicect.GroupDisplay.ExpandGrid.Desc>
+    <VUIE.Archicect.GroupDisplay.Vanilla.Desc>Display icon of last used inner gizmo</VUIE.Archicect.GroupDisplay.Vanilla.Desc>
+    <VUIE.Architect.MaxGridWidth>Maximum grid width"</VUIE.Architect.MaxGridWidth>
+    <VUIE.Architect.MaxGridDepth>Maximum side length</VUIE.Architect.MaxGridDepth>
+    <VUIE.Architect.LeftClick>Left click open menu</VUIE.Architect.LeftClick>
+    <VUIE.Architect.LeftClick.Desc>Open selection menu on left click, by default selects the current mousedover item</VUIE.Architect.LeftClick.Desc>
+    <VUIE.Architect.Config>Architect Configurations</VUIE.Architect.Config>
+    <VUIE.Active>Active</VUIE.Active>
+    <VUIE.SetActive>Set Active</VUIE.SetActive>
+    <VUIE.Remove>Remove</VUIE.Remove>
+    <VUIE.Architect.AddConfig>Add Configuration</VUIE.Architect.AddConfig>
+    <VUIE.FloatMenus>Float Menus</VUIE.FloatMenus>
+    <VUIE.FloatMenus.ShowSwitch>Show switch buttons</VUIE.FloatMenus.ShowSwitch>
+    <VUIE.FloatMenus.ForceDialog>Force Dialogs</VUIE.FloatMenus.ForceDialog>
+    <VUIE.FloatMenus.ForceVanilla>Force Vanilla</VUIE.FloatMenus.ForceVanilla>
+    <VUIE.FloatMenus.Default>Default (Dialog when >30 options)</VUIE.FloatMenus.Default>
+</LanguageData>

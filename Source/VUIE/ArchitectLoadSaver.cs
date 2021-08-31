@@ -11,15 +11,12 @@ namespace VUIE
     {
         public static MainTabWindow_Architect Architect => (MainTabWindow_Architect) MainButtonDefOf.Architect.TabWindow;
 
-        public static ArchitectSaved SaveState(string name, bool vanilla = false)
+        public static ArchitectSaved SaveState(string name, bool vanilla = false) => new()
         {
-            return new ArchitectSaved
-            {
-                Name = name,
-                Vanilla = vanilla,
-                Tabs = Architect.desPanelsCached.Select(ArchitectTabSaved.Save).ToList()
-            };
-        }
+            Name = name,
+            Vanilla = vanilla,
+            Tabs = Architect.desPanelsCached.Select(ArchitectTabSaved.Save).ToList()
+        };
 
         public static void RestoreState(ArchitectSaved saved)
         {
@@ -72,15 +69,12 @@ namespace VUIE
             Scribe_Collections.Look(ref Designators, "designators", LookMode.Deep);
         }
 
-        public static ArchitectTabSaved Save(ArchitectCategoryTab tab)
+        public static ArchitectTabSaved Save(ArchitectCategoryTab tab) => new()
         {
-            return new ArchitectTabSaved
-            {
-                Label = tab.def.label,
-                DefName = tab.def.LabelCap,
-                Designators = tab.def.AllResolvedDesignators.Select(DesignatorSaved.Save).ToList()
-            };
-        }
+            Label = tab.def.label,
+            DefName = tab.def.LabelCap,
+            Designators = tab.def.AllResolvedDesignators.Select(DesignatorSaved.Save).ToList()
+        };
     }
 
     public struct DesignatorSaved : IExposable

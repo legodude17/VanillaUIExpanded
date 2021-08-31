@@ -28,7 +28,7 @@ namespace VUIE
         public GroupDisplayType GroupDisplay = GroupDisplayType.SquareGrid;
         public bool GroupOpenLeft;
         public int MaxSize = 4;
-        public List<ArchitectSaved> SavedStates = new List<ArchitectSaved>();
+        public List<ArchitectSaved> SavedStates = new();
         public int VanillaIndex = -1;
 
         static ArchitectModule()
@@ -36,13 +36,11 @@ namespace VUIE
             LongEventHandler.ExecuteWhenFinished(() =>
             {
                 foreach (var tab in ArchitectLoadSaver.Architect.desPanelsCached) tab.def.ResolveDesignators();
-                var vanilla = ArchitectLoadSaver.SaveState("Vanilla", true);
+                var vanilla = ArchitectLoadSaver.SaveState("VUIE.Vanilla".Translate(), true);
                 var me = UIMod.GetModule<ArchitectModule>();
-                if (me.SavedStates == null) me.SavedStates = new List<ArchitectSaved>();
+                me.SavedStates ??= new List<ArchitectSaved>();
                 if (me.VanillaIndex >= 0)
-                {
                     me.SavedStates[me.VanillaIndex] = vanilla;
-                }
                 else
                 {
                     me.VanillaIndex = me.SavedStates.Count;
@@ -50,40 +48,40 @@ namespace VUIE
                 }
 
                 if (me.ActiveIndex < 0) me.ActiveIndex = me.VanillaIndex;
-                if (me.ActiveIndex != me.VanillaIndex)
-                {
-                    ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex]);
-                    DoDesInit = false;
-                }
+                if (me.ActiveIndex == me.VanillaIndex) return;
+                ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex]);
+                DoDesInit = false;
             });
         }
 
-        public override string Label => "Architect Menu";
+        public override string Label => "VUIE.Architect".Translate();
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
             base.DoSettingsWindowContents(inRect);
             var listing = new Listing_Standard();
             listing.Begin(inRect);
-            if (listing.ButtonText("Open Architect Configuration Dialog")) Find.WindowStack.Add(new Dialog_ConfigureArchitect());
+            if (listing.ButtonText("VUIE.Archictect.Open".Translate())) Find.WindowStack.Add(new Dialog_ConfigureArchitect());
             listing.GapLine();
-            listing.Label("Group Display Type:");
+            listing.Label("VUIE.Archictect.GroupDisplay".Translate() + ":");
             listing.Indent();
             listing.ColumnWidth -= 12f;
-            if (listing.RadioButton("Square Grid", GroupDisplay == GroupDisplayType.SquareGrid, 0f, "Keep normal gizmo size, display a small grid of options"))
+            if (listing.RadioButton("VUIE.Architect.GroupDisplay.SquareGrid".Translate(), GroupDisplay == GroupDisplayType.SquareGrid, 0f,
+                "VUIE.Architect.GroupDisplay.SquareGrid.Desc".Translate()))
                 GroupDisplay = GroupDisplayType.SquareGrid;
-            if (listing.RadioButton("Expanding Grid", GroupDisplay == GroupDisplayType.ExpandGrid, 0f, "Keep grid with a max height of 2, expand width to fit"))
+            if (listing.RadioButton("VUIE.Architect.GroupDisplay.ExpandGrid".Translate(), GroupDisplay == GroupDisplayType.ExpandGrid, 0f,
+                "VUIE.Architect.GroupDisplay.ExpandGrid.Desc".Translate()))
                 GroupDisplay = GroupDisplayType.ExpandGrid;
-            if (listing.RadioButton("Vanilla", GroupDisplay == GroupDisplayType.Vanilla, 0f, "Display last used gizmo icon"))
+            if (listing.RadioButton("VUIE.Vanilla".Translate(), GroupDisplay == GroupDisplayType.Vanilla, 0f, "VUIE.Architect.GroupDisplay.Vanilla.Desc".Translate()))
                 GroupDisplay = GroupDisplayType.Vanilla;
             listing.Gap(6f);
             switch (GroupDisplay)
             {
                 case GroupDisplayType.SquareGrid:
-                    listing.TextFieldNumericLabeled("Maximum grid depth", ref MaxSize, ref buffer, 2, 4);
+                    listing.TextFieldNumericLabeled("VUIE.Architect.MaxGridDepth".Translate(), ref MaxSize, ref buffer, 2, 4);
                     break;
                 case GroupDisplayType.ExpandGrid:
-                    listing.TextFieldNumericLabeled("Maximum grid width", ref MaxSize, ref buffer, 1, 10);
+                    listing.TextFieldNumericLabeled("VUIE.Architect.MaxGridWidth".Translate(), ref MaxSize, ref buffer, 1, 10);
                     break;
                 case GroupDisplayType.Vanilla:
                     break;
@@ -94,33 +92,33 @@ namespace VUIE
             listing.ColumnWidth += 12f;
             listing.Outdent();
             listing.Gap(6f);
-            listing.CheckboxLabeled("Left click open menu", ref GroupOpenLeft, "Open selection menu on left click, by default selects the current mousedover item");
+            listing.CheckboxLabeled("VUIE.Architect.LeftClick".Translate(), ref GroupOpenLeft, "VUIE.Architect.LeftClick.Desc".Translate());
             listing.GapLine();
-            listing.Label("Architect Configurations:");
+            listing.Label("VUIE.Architect.Config".Translate() + ":");
             foreach (var state in SavedStates.ToList())
             {
                 var rect = listing.GetRect(30f);
                 var row = new WidgetRow(rect.x, rect.y, UIDirection.RightThenDown);
                 row.Label(state.Name);
                 row.Gap(50f);
-                row.Label("Vanilla:");
+                row.Label("VUIE.Vanilla".Translate() + ":");
                 row.Icon(state.Vanilla ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
                 row.Gap(12f);
-                row.Label("Active:");
+                row.Label("VUIE.Active".Translate() + ":");
                 row.Icon(SavedStates.IndexOf(state) == ActiveIndex ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
                 row.Gap(12f);
-                if (row.ButtonText("Set Active"))
+                if (row.ButtonText("VUIE.SetActive".Translate()))
                 {
                     ActiveIndex = SavedStates.IndexOf(state);
                     ArchitectLoadSaver.RestoreState(state);
                 }
 
                 row.Gap(3f);
-                if (row.ButtonText("Remove")) SavedStates.Remove(state);
+                if (row.ButtonText("VUIE.Remove".Translate())) SavedStates.Remove(state);
             }
 
             listing.Gap(6f);
-            if (listing.ButtonText("Add Configuration")) Dialog_TextEntry.GetString(str => SavedStates.Add(ArchitectLoadSaver.SaveState(str)));
+            if (listing.ButtonText("VUIE.Architect.AddConfig".Translate())) Dialog_TextEntry.GetString(str => SavedStates.Add(ArchitectLoadSaver.SaveState(str)));
 
             listing.End();
         }
@@ -147,10 +145,7 @@ namespace VUIE
                 new HarmonyMethod(typeof(ArchitectModule), nameof(SkipDesInit)), new HarmonyMethod(typeof(ArchitectModule), nameof(FixDesig)));
         }
 
-        public static bool SkipDesInit()
-        {
-            return DoDesInit;
-        }
+        public static bool SkipDesInit() => DoDesInit;
 
         public static void OverrideMouseOverGizmo(ref Gizmo mouseoverGizmo)
         {

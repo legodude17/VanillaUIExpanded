@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <VUIE.Main>Main</VUIE.Main>
+    <VUIE.Architect.DropDelete>Drop to Delete</VUIE.Architect.DropDelete>
+    <VUIE.Add>Add</VUIE.Add>
+    <VUIE.ToVanilla>Switch to Vanilla</VUIE.ToVanilla>
+    <VUIE.History.WealthList>Wealth List</VUIE.History.WealthList>
+    <VUIE.History.AllThingsWealth>Everything contributing to wealth</VUIE.History.AllThingsWealth>
+    <VUIE.Refresh>Refresh</VUIE.Refresh>
+</LanguageData>

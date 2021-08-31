@@ -36,12 +36,12 @@ namespace VUIE
             var row = new WidgetRow(inRect.x, inRect.y, UIDirection.RightThenDown);
             if (row.ButtonText("<", fixedWidth: 50f, active: curPage > 0)) curPage--;
             row.Gap(12f);
-            row.Label("Page " + (curPage + 1) + " of " + pages);
+            row.Label("VUIE.PageOf".Translate(curPage + 1, pages));
             if (searchWidget != null)
             {
                 row.Gap(12f);
-                var rect = new Rect(row.LeftX(100f), row.curY, 100f, inRect.height);
-                row.IncrementPosition(100f);
+                var rect = new Rect(row.LeftX(200f), row.curY, 200f, inRect.height);
+                row.IncrementPosition(200f);
                 searchWidget.OnGUI(rect);
             }
 

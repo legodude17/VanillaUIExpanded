@@ -10,24 +10,22 @@ namespace VUIE
 {
     public class HistoryTabModule : Module
     {
-        private static readonly List<Thing> tmpThings = new List<Thing>();
-        public static List<ThingWithWealth> WealthThings = new List<ThingWithWealth>();
-        public static List<ThingWealthGroup> Display = new List<ThingWealthGroup>();
+        private static readonly List<Thing> tmpThings = new();
+        public static List<ThingWithWealth> WealthThings = new();
+        public static List<ThingWealthGroup> Display = new();
         private static Vector2 scrollPos = Vector2.one;
 
         public override void DoPatches(Harmony harm)
         {
             harm.Patch(AccessTools.Method(typeof(MainTabWindow_History), nameof(MainTabWindow_History.PreOpen)),
                 postfix: new HarmonyMethod(typeof(HistoryTabModule), nameof(AddTab)));
-            // harm.Patch(AccessTools.Method(typeof(HistoryTabModule), nameof(CheckTab)), transpiler: new HarmonyMethod(typeof(HistoryTabModule), nameof(CheckTab_Transpile)));
-            // harm.Patch(AccessTools.Method(typeof(HistoryTabModule), nameof(SetTab)), transpiler: new HarmonyMethod(typeof(HistoryTabModule), nameof(SetTab_Transpile)));
             harm.Patch(AccessTools.Method(typeof(MainTabWindow_History), nameof(MainTabWindow_History.DoWindowContents)),
                 transpiler: new HarmonyMethod(typeof(HistoryTabModule), nameof(AddContents)));
         }
 
         public static void AddTab(MainTabWindow_History __instance)
         {
-            __instance.tabs.Add(new TabRecord("Wealth List", SetTab, CheckTab));
+            __instance.tabs.Add(new TabRecord("VUIE.History.WealthList".Translate(), SetTab, CheckTab));
             RefreshThings();
         }
 
@@ -38,7 +36,7 @@ namespace VUIE
             ThingOwnerUtility.GetAllThingsRecursively(Find.CurrentMap, ThingRequest.ForGroup(ThingRequestGroup.HaulableEver), tmpThings, false,
                 x =>
                 {
-                    if (x is PassingShip || x is MapComponent) return false;
+                    if (x is PassingShip or MapComponent) return false;
                     var pawn = x as Pawn;
                     return (pawn == null || pawn.Faction == Faction.OfPlayer) && (pawn == null || !pawn.IsQuestLodger());
                 });
@@ -84,13 +82,13 @@ namespace VUIE
             Widgets.BeginScrollView(inRect.ContractedBy(7f), ref scrollPos, viewRect);
             listing.Begin(viewRect);
             Text.Anchor = TextAnchor.MiddleLeft;
-            if (listing.ButtonTextLabeled("All Things contributing to wealth:", "Refresh")) RefreshThings();
+            if (listing.ButtonTextLabeled("VUIE.History.AllThingsWealth".Translate() + ":", "VUIE.Refresh".Translate())) RefreshThings();
             listing.GapLine();
-            var hightlight = false;
+            var highlight = false;
             foreach (var item in Display)
             {
                 var rect = listing.GetRect(30f);
-                if (hightlight) Widgets.DrawLightHighlight(rect);
+                if (highlight) Widgets.DrawLightHighlight(rect);
                 if (Mouse.IsOver(rect)) Widgets.DrawHighlight(rect);
                 if (Widgets.ButtonImage(rect.LeftPartPixels(30f), item.expanded ? TexButton.Collapse : TexButton.Reveal)) item.expanded = !item.expanded;
                 Widgets.ThingIcon(rect.LeftPartPixels(70f).RightPartPixels(30f), item.example);
@@ -106,7 +104,7 @@ namespace VUIE
                         Find.Selector.Select(thing.thing);
                 }
 
-                hightlight = !hightlight;
+                highlight = !highlight;
 
                 if (item.expanded)
                 {
@@ -116,7 +114,7 @@ namespace VUIE
                     foreach (var thingWithWealth in item.children)
                     {
                         var rect2 = listing.GetRect(30f);
-                        if (hightlight) Widgets.DrawLightHighlight(rect2);
+                        if (highlight) Widgets.DrawLightHighlight(rect2);
                         if (Mouse.IsOver(rect2)) Widgets.DrawHighlight(rect2);
                         Widgets.ThingIcon(rect2.LeftPartPixels(50f).RightPartPixels(30f), thingWithWealth.thing);
                         Text.Anchor = TextAnchor.MiddleLeft;
@@ -130,7 +128,7 @@ namespace VUIE
                         }
 
                         listing.Gap(2f);
-                        hightlight = !hightlight;
+                        highlight = !highlight;
                     }
 
                     listing.ColumnWidth += 12f;
@@ -163,31 +161,7 @@ namespace VUIE
             return list;
         }
 
-        private static IEnumerable<CodeInstruction> CheckTab_Transpile(IEnumerable<CodeInstruction> instructions)
-        {
-            return new[]
-            {
-                new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(MainTabWindow_History), nameof(MainTabWindow_History.curTab))),
-                new CodeInstruction(OpCodes.Ldc_I4_3),
-                new CodeInstruction(OpCodes.Ceq),
-                new CodeInstruction(OpCodes.Ret)
-            };
-        }
-
-        private static IEnumerable<CodeInstruction> SetTab_Transpile(IEnumerable<CodeInstruction> instructions)
-        {
-            return new[]
-            {
-                new CodeInstruction(OpCodes.Ldc_I4_3),
-                new CodeInstruction(OpCodes.Stsfld, AccessTools.Field(typeof(MainTabWindow_History), nameof(MainTabWindow_History.curTab))),
-                new CodeInstruction(OpCodes.Ret)
-            };
-        }
-
-        private static bool CheckTab()
-        {
-            return MainTabWindow_History.curTab == (MainTabWindow_History.HistoryTab) 3;
-        }
+        private static bool CheckTab() => MainTabWindow_History.curTab == (MainTabWindow_History.HistoryTab) 3;
 
         private static void SetTab()
         {

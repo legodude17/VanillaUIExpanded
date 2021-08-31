@@ -15,16 +15,17 @@ namespace VUIE
             var text = __result.text;
             if (__instance.CurJob != null) text += "\n" + __instance.jobs.curDriver.GetReport().CapitalizeFirst();
 
-            if (__instance.needs?.mood != null)
-            {
-                if (__instance.InMentalState) text += "\n" + __instance.MentalState.InspectLine;
-                else if (__instance.mindState.mentalBreaker.BreakExtremeIsImminent) text += "\nFeeling depressed";
-                else if (__instance.mindState.mentalBreaker.BreakMajorIsImminent) text += "\nFeeling unhappy";
-                else if (__instance.mindState.mentalBreaker.BreakMinorIsImminent) text += "\nFeeling stressed";
-                else if (__instance.needs.mood.CurLevel > 0.9f) text += "\nFeeling happy";
-                else if (__instance.needs.mood.CurLevel > 0.65f) text += "\nFeeling content";
-                else __result.text += "\nFeeling indifferent";
-            }
+            if (__instance.InMentalState) text += "\n" + __instance.MentalState.InspectLine;
+            else if (__instance.needs?.mood != null)
+                text += "\n" + (__instance.needs.mood.CurLevel switch
+                {
+                    _ when __instance.mindState.mentalBreaker.BreakExtremeIsImminent => "VUIE.Moods.Extreme",
+                    _ when __instance.mindState.mentalBreaker.BreakMajorIsImminent => "VUIE.Moods.Major",
+                    _ when __instance.mindState.mentalBreaker.BreakMinorIsImminent => "VUIE.Moods.Minor",
+                    > 0.9f => "VUIE.Moods.VeryHigh",
+                    > 0.65f => "VUIE.Moods.High",
+                    _ => "VUIE.Moods.Neutral"
+                }).Translate();
 
             if (__instance.Inspired) text += "\n" + __instance.Inspiration.InspectLine;
 

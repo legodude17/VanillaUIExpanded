@@ -11,15 +11,14 @@ namespace VUIE
     {
         public static UISettings Settings;
         private static List<Module> modules;
-        private readonly List<TabRecord> tabs;
 
         private Module curModule;
+        private List<TabRecord> tabs;
 
         public UIMod(ModContentPack content) : base(content)
         {
             var harm = new Harmony("vanillaexpanded.ui");
             modules = typeof(Module).AllSubclassesNonAbstract().Select(type => (Module) Activator.CreateInstance(type)).ToList();
-            tabs = modules.Where(mod => !mod.Label.NullOrEmpty()).Select(mod => new TabRecord(mod.Label, () => curModule = mod, curModule == mod)).ToList();
             curModule = modules.First();
             Settings = GetSettings<UISettings>();
             foreach (var module in modules) module.DoPatches(harm);
@@ -27,20 +26,14 @@ namespace VUIE
 
         public static IEnumerable<Module> AllModules => modules;
 
-        public static T GetModule<T>() where T : Module
-        {
-            return modules.OfType<T>().First();
-        }
+        public static T GetModule<T>() where T : Module => modules.OfType<T>().First();
 
-
-        public override string SettingsCategory()
-        {
-            return "Vanilla UI Expanded";
-        }
+        public override string SettingsCategory() => "VUIE".Translate();
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
             base.DoSettingsWindowContents(inRect);
+            tabs ??= modules.Where(mod => !mod.Label.NullOrEmpty()).Select(mod => new TabRecord(mod.Label, () => curModule = mod, curModule == mod)).ToList();
             inRect.yMin += 25f;
             TabDrawer.DrawTabs(inRect, tabs);
             if (!curModule.Label.NullOrEmpty()) curModule.DoSettingsWindowContents(inRect);

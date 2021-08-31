@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <MainButtonDef>
+    <defName>VUIE_Chat</defName>
+    <label>chat</label>
+    <description>View all of the social interactions of your colonists and other beings.</description>
+    <tabWindowClass>VUIE.MainTabWindow_Chat</tabWindowClass>
+    <order>75</order>
+    <closesWorldView>true</closesWorldView>
+  </MainButtonDef>
+  
+</Defs>

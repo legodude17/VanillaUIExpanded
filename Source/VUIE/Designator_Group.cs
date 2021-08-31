@@ -110,8 +110,6 @@ namespace VUIE
             var grid = (module.GroupDisplay == ArchitectModule.GroupDisplayType.SquareGrid
                 ? GizmoDrawer.DivideIntoGrid(rect, Math.Min(gizmos.Count, (int) Math.Pow(module.MaxSize, 2)))
                 : GizmoDrawer.DivideIntoGrid(rect, gizmos.Count, Mathf.Min(module.MaxSize, Mathf.CeilToInt(gizmos.Count / 2f)), 2)).ToList();
-            Log.Message("Grid:");
-            GenDebug.LogList(grid);
             display = gizmos.Zip(grid, (designator, rect1) => (designator, rect1)).ToList();
             Active = display?.FirstOrDefault(tuple => Mouse.IsOver(tuple.Item2)).Item1;
 

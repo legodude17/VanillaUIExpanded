@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <VUIE.FloatMenus.SwitchToFull>Switch to Full Dialog</VUIE.FloatMenus.SwitchToFull>
+    <VUIE.PageOf>Page {0} of {1}</VUIE.PageOf>
+    <VUIE.Moods.Extreme>Feeling depressed</VUIE.Moods.Extreme>
+    <VUIE.Moods.Major>Feeling unhappy</VUIE.Moods.Major>
+    <VUIE.Moods.Minor>Feeling stressed</VUIE.Moods.Minor>
+    <VUIE.Moods.VeryHigh>Feeling happy</VUIE.Moods.VeryHigh>
+    <VUIE.Moods.High>Feeling content</VUIE.Moods.High>
+    <VUIE.Moods.Neutral>Feeling indifferent</VUIE.Moods.Neutral>
+    <VUIE>Vanilla UI Expanded</VUIE>
+    <VUIE.DateTiny>{0}h {1}/{2}/{3}</VUIE.DateTiny>
+</LanguageData>

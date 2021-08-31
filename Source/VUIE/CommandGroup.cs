@@ -29,10 +29,10 @@ namespace VUIE
             drawShadow = false;
             preventCameraMotion = false;
             layer = WindowLayer.Super;
-            this.onMouseOver = onMouseOver ?? (c => { });
-            this.onChosen = onChosen ?? (c => { });
-            this.highlightFunc = highlightFunc ?? (c => false);
-            this.lowlightFunc = lowlightFunc ?? (c => false);
+            this.onMouseOver = onMouseOver ?? (_ => { });
+            this.onChosen = onChosen ?? (_ => { });
+            this.highlightFunc = highlightFunc ?? (_ => false);
+            this.lowlightFunc = lowlightFunc ?? (_ => false);
             closeFunc = shouldClose ?? (() => false);
         }
 

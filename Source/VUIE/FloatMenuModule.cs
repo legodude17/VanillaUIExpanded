@@ -10,10 +10,10 @@ namespace VUIE
 {
     public class FloatMenuModule : Module
     {
-        public Dictionary<CallInfo, bool?> FloatMenuSettings = new Dictionary<CallInfo, bool?>();
+        public Dictionary<CallInfo, bool?> FloatMenuSettings = new();
         private Vector2 scrollPos;
         public bool ShowSwitchButtons = true;
-        public override string Label => "Float Menus";
+        public override string Label => "VUIE.FloatMenus".Translate();
 
 
         public static FloatMenuModule Instance => UIMod.GetModule<FloatMenuModule>();
@@ -23,10 +23,7 @@ namespace VUIE
             return new StackTrace(false).GetFrames()?.Skip(3).First(frame => !SubclassOrEqual(frame.GetMethod().DeclaringType, typeof(FloatMenu)));
         }
 
-        private static bool SubclassOrEqual(Type type1, Type type2)
-        {
-            return type1 == type2 || type1.IsSubclassOf(type2);
-        }
+        private static bool SubclassOrEqual(Type type1, Type type2) => type1 == type2 || type1.IsSubclassOf(type2);
 
         public override void DoPatches(Harmony harm)
         {
@@ -42,16 +39,17 @@ namespace VUIE
             var listing = new Listing_Standard();
             Widgets.BeginScrollView(outRect, ref scrollPos, viewRect);
             listing.Begin(viewRect);
-            listing.CheckboxLabeled("Show Switch Buttons", ref Instance.ShowSwitchButtons);
+            listing.CheckboxLabeled("VUIE.FloatMenus.ShowSwitch".Translate(), ref Instance.ShowSwitchButtons);
             foreach (var setting in Instance.FloatMenuSettings.ToList())
             {
                 listing.Label(setting.Key);
                 listing.Gap(4f);
                 listing.ColumnWidth -= 12f;
                 listing.Indent();
-                if (listing.RadioButton("Force Dialog", setting.Value.HasValue && setting.Value.Value)) Instance.FloatMenuSettings[setting.Key] = true;
-                if (listing.RadioButton("Force Vanilla", setting.Value.HasValue && !setting.Value.Value)) Instance.FloatMenuSettings[setting.Key] = false;
-                if (listing.RadioButton("Default (Dialog when >30 options)", !setting.Value.HasValue)) Instance.FloatMenuSettings[setting.Key] = null;
+                if (listing.RadioButton("VUIE.FloatMenus.ForceDialog".Translate(), setting.Value.HasValue && setting.Value.Value)) Instance.FloatMenuSettings[setting.Key] = true;
+                if (listing.RadioButton("VUIE.FloatMenus.ForceVanilla".Translate(), setting.Value.HasValue && !setting.Value.Value))
+                    Instance.FloatMenuSettings[setting.Key] = false;
+                if (listing.RadioButton("VUIE.FloatMenus.Default".Translate(), !setting.Value.HasValue)) Instance.FloatMenuSettings[setting.Key] = null;
                 listing.ColumnWidth += 12f;
                 listing.Outdent();
                 listing.GapLine();
@@ -84,7 +82,7 @@ namespace VUIE
             if (Instance.ShowSwitchButtons &&
                 !(Instance.FloatMenuSettings.ContainsKey(key) && Instance.FloatMenuSettings[key].HasValue && Instance.FloatMenuSettings[key].Value) &&
                 key.MethodName != "TryMakeFloatMenu")
-                options.Add(new FloatMenuOption("Switch to Full Dialog", () => Instance.FloatMenuSettings[key] = true));
+                options.Add(new FloatMenuOption("VUIE.FloatMenus.SwitchToFull".Translate(), () => Instance.FloatMenuSettings[key] = true));
         }
 
         public override void SaveSettings()
@@ -100,15 +98,9 @@ namespace VUIE
             public string Namespace;
             public string MethodName;
 
-            public static implicit operator string(CallInfo info)
-            {
-                return $"{info.Namespace}.{info.TypeName}.{info.MethodName}";
-            }
+            public static implicit operator string(CallInfo info) => $"{info.Namespace}.{info.TypeName}.{info.MethodName}";
 
-            public static implicit operator CallInfo(StackFrame frame)
-            {
-                return new CallInfo(frame);
-            }
+            public static implicit operator CallInfo(StackFrame frame) => new(frame);
 
             public void ExposeData()
             {

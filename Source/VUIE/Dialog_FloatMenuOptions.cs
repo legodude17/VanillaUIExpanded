@@ -11,7 +11,7 @@ namespace VUIE
         private readonly List<FloatMenuOption> options;
         private readonly List<ThingDef> shownItems;
         private readonly FloatMenuModule.CallInfo source;
-        private Vector2 scrollPosition = new Vector2(0, 0);
+        private Vector2 scrollPosition = new(0, 0);
         private string searchText = "";
 
         public Dialog_FloatMenuOptions(List<FloatMenuOption> opts)
@@ -36,18 +36,13 @@ namespace VUIE
                     shownItems.Add(null);
                 }
                 else
-                {
                     shownItems.Add(shown);
-                }
             }
         }
 
-        public Dialog_FloatMenuOptions(List<FloatMenuOption> opts, FloatMenuModule.CallInfo caller) : this(opts)
-        {
-            source = caller;
-        }
+        public Dialog_FloatMenuOptions(List<FloatMenuOption> opts, FloatMenuModule.CallInfo caller) : this(opts) => source = caller;
 
-        public override Vector2 InitialSize => new Vector2(620f, 500f);
+        public override Vector2 InitialSize => new(620f, 500f);
 
         public override void DoWindowContents(Rect inRect)
         {
@@ -96,7 +91,7 @@ namespace VUIE
                 if (Widgets.ButtonText(new Rect(inRect.width / 2f + 10f, inRect.height - 55f, CloseButSize.x, CloseButSize.y),
                     "CloseButton".Translate()))
                     Close();
-                if (Widgets.ButtonText(new Rect(inRect.width / 2f - 10f - CloseButSize.x, inRect.height - 55f, CloseButSize.x, CloseButSize.y), "Switch to Vanilla"))
+                if (Widgets.ButtonText(new Rect(inRect.width / 2f - 10f - CloseButSize.x, inRect.height - 55f, CloseButSize.x, CloseButSize.y), "VUIE.ToVanilla".Translate()))
                 {
                     FloatMenuModule.Instance.FloatMenuSettings[source] = false;
                     Close();

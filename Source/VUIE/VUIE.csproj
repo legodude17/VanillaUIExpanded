@@ -81,6 +81,7 @@
     <Compile Include="DragDropManager.cs" />
     <Compile Include="FloatMenuModule.cs" />
     <Compile Include="HistoryTabModule.cs" />
+    <Compile Include="MainTabWindow_Chat.cs" />
     <Compile Include="MessagesPageModule.cs" />
     <Compile Include="MiscModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

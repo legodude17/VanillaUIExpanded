@@ -52,7 +52,7 @@ namespace VUIE
             var module = UIMod.GetModule<ArchitectModule>();
             if (module.ActiveIndex == module.VanillaIndex)
             {
-                var state = ArchitectLoadSaver.SaveState("Main");
+                var state = ArchitectLoadSaver.SaveState("VUIE.Main".Translate());
                 module.ActiveIndex = module.SavedStates.Count;
                 module.SavedStates.Add(state);
             }
@@ -82,7 +82,7 @@ namespace VUIE
                 var flag = false;
                 GizmoDrawer.DrawGizmos(selectedCategoryTab.def.AllResolvedDesignators, gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), false, (giz, topLeft) =>
                 {
-                    if (giz is Designator_Dropdown || giz is Designator_Group) selected = (Designator) giz;
+                    if (giz is Designator_Dropdown or Designator_Group) selected = (Designator) giz;
                     return true;
                 }, useHotkeys: false, drawExtras: (gizmo, rect) =>
                 {
@@ -121,7 +121,12 @@ namespace VUIE
                 var labelRect = selectedRect.TopPartPixels(20f);
                 Widgets.Label(labelRect, selected.Label);
                 selectedRect.yMin += 30f;
-                var children = selected is Designator_Group group ? group.Elements : selected is Designator_Dropdown dropdown ? dropdown.Elements : null;
+                var children = selected switch
+                {
+                    Designator_Group group => group.Elements,
+                    Designator_Dropdown dropdown => dropdown.Elements,
+                    _ => null
+                };
                 if (children != null)
                 {
                     GizmoDrawer.DrawGizmos(children, selectedRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), false, (giz, topLeft) => true, useHotkeys: false,
@@ -129,7 +134,7 @@ namespace VUIE
                         {
                             if (dragDropManager.TryStartDrag(gizmo as Designator, rect)) children.Remove(gizmo as Designator);
                         });
-                    dragDropManager.DropLocation(selectedRect, des => Widgets.DrawHighlight(selectedRect), des =>
+                    dragDropManager.DropLocation(selectedRect, _ => Widgets.DrawHighlight(selectedRect), des =>
                     {
                         children.Add(des);
                         return true;
@@ -160,8 +165,8 @@ namespace VUIE
                     }
                 }, useHotkeys: false, searchWidget: availableSearch, jump: !setPageWhileSearching);
             if (oldPage != curAvailablePage && availableSearch.filter.Active) setPageWhileSearching = true;
-            if (dragDropManager.DraggingNow) TooltipHandler.TipRegion(inRect, "Drop to Delete");
-            dragDropManager.DropLocation(inRect, des => Widgets.DrawHighlight(inRect), des => true);
+            if (dragDropManager.DraggingNow) TooltipHandler.TipRegionByKey(inRect, "VUIE.Architect.DropDelete");
+            dragDropManager.DropLocation(inRect, _ => Widgets.DrawHighlight(inRect), _ => true);
         }
 
         private void DoUnassignedList(Rect inRect)
@@ -210,7 +215,7 @@ namespace VUIE
                 if (selectedCategoryTab != tab) UIHighlighter.HighlightOpportunity(rect, tab.def.cachedHighlightClosedTag);
             }
 
-            if (Widgets.ButtonText(addRect, "Add"))
+            if (Widgets.ButtonText(addRect, "VUIE.Add".Translate()))
                 Dialog_TextEntry.GetString(str =>
                 {
                     var catDef = new DesignationCategoryDef
