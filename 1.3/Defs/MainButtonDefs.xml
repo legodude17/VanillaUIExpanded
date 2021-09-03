@@ -5,8 +5,8 @@
     <label>chat</label>
     <description>View all of the social interactions of your colonists and other beings.</description>
     <tabWindowClass>VUIE.MainTabWindow_Chat</tabWindowClass>
+    <workerClass>VUIE.MainButtonWorker_Chat</workerClass>
     <order>75</order>
     <closesWorldView>true</closesWorldView>
   </MainButtonDef>
-  
 </Defs>

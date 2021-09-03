@@ -63,7 +63,7 @@ namespace VUIE
                     {
                         curLoc.x = inRect.xMin;
                         curLoc.y += shrunkSize + 3f;
-                        if (curLoc.y + Gizmo.Height > inRect.yMax)
+                        if (curLoc.y + shrunkSize * 2 > inRect.yMax)
                         {
                             result.Add(curGroup);
                             curGroup = new List<Gizmo>();
@@ -81,8 +81,8 @@ namespace VUIE
                     if (curLoc.x + gizmo.GetWidth(inRect.width) > inRect.xMax)
                     {
                         curLoc.x = inRect.xMin;
-                        curLoc.y += Gizmo.Height + GizmoGridDrawer.GizmoSpacing.x;
-                        if (curLoc.y + Gizmo.Height > inRect.yMax)
+                        curLoc.y += Gizmo.Height + GizmoGridDrawer.GizmoSpacing.y;
+                        if (curLoc.y + Gizmo.Height * 2 > inRect.yMax)
                         {
                             result.Add(curGroup);
                             curGroup = new List<Gizmo>();
@@ -99,13 +99,54 @@ namespace VUIE
             return result;
         }
 
+        public static IEnumerable<(Rect, Gizmo)> Format(IReadOnlyCollection<Gizmo> gizmos, Rect inRect, bool shrunk = false, Vector2 additionalSpacing = default)
+        {
+            if (shrunk && !gizmos.All(g => g is Command)) throw new ArgumentException("If shrunk, all gizmos must be Commands");
+            var curLoc = new Vector2(inRect.xMin, inRect.yMin);
+            if (shrunk)
+                foreach (var command in gizmos.OfType<Command>().Where(c => c.Visible))
+                {
+                    var shrunkSize = command.GetShrunkSize;
+                    if (curLoc.x + shrunkSize > inRect.xMax)
+                    {
+                        curLoc.x = inRect.xMin;
+                        curLoc.y += shrunkSize + 3f + additionalSpacing.y;
+                        if (curLoc.y + Gizmo.Height > inRect.yMax)
+                        {
+                            curLoc.x = inRect.xMin;
+                            curLoc.y = inRect.yMin;
+                        }
+                    }
+
+                    yield return (new Rect(curLoc, new Vector2(shrunkSize, shrunkSize)), command);
+                    curLoc.x += shrunkSize + 3f + additionalSpacing.x;
+                }
+            else
+                foreach (var gizmo in gizmos.Where(gizmo => gizmo.Visible))
+                {
+                    if (curLoc.x + gizmo.GetWidth(inRect.width) > inRect.xMax)
+                    {
+                        curLoc.x = inRect.xMin;
+                        curLoc.y += Gizmo.Height + GizmoGridDrawer.GizmoSpacing.x + additionalSpacing.y;
+                        if (curLoc.y + Gizmo.Height > inRect.yMax)
+                        {
+                            curLoc.x = inRect.xMin;
+                            curLoc.y = inRect.yMin;
+                        }
+                    }
+
+                    curLoc.x += gizmo.GetWidth(inRect.width) + GizmoGridDrawer.GizmoSpacing.x + additionalSpacing.x;
+                    yield return (new Rect(curLoc, new Vector2(gizmo.GetWidth(inRect.width), Gizmo.Height)), gizmo);
+                }
+        }
+
         public static void DrawGizmos(IEnumerable<Gizmo> gizmos, Rect inRect, bool forceShrunk = false, Func<Gizmo, Vector2, bool> onClicked = null,
             Action<Gizmo> onMouseOver = null, Func<Gizmo, bool> highlightFunc = null, Func<Gizmo, bool> lowlightFunc = null, bool useHotkeys = true,
-            Action<Gizmo, Rect> drawExtras = null)
+            Action<Gizmo, Rect> drawExtras = null, Vector2 additionalSpacing = default, bool sort = true)
         {
             StateStack.Push(SimplePool<State>.Get());
             var state = StateStack.Peek();
-            state.Init(gizmos);
+            state.Init(gizmos, sort);
             var curLoc = new Vector2(inRect.xMin, inRect.yMin);
             var num2 = 0;
             foreach (var group in state.gizmoGroups)
@@ -138,11 +179,11 @@ namespace VUIE
                     if (curLoc.x + gizmo2.GetWidth(inRect.width) > inRect.xMax)
                     {
                         curLoc.x = inRect.xMin;
-                        curLoc.y += Gizmo.Height + GizmoGridDrawer.GizmoSpacing.x;
+                        curLoc.y += Gizmo.Height + GizmoGridDrawer.GizmoSpacing.y + additionalSpacing.y;
                         num2++;
                     }
 
-                    curLoc.x += gizmo2.GetWidth(inRect.width) + GizmoGridDrawer.GizmoSpacing.x;
+                    curLoc.x += gizmo2.GetWidth(inRect.width) + GizmoGridDrawer.GizmoSpacing.x + additionalSpacing.x;
                     state.firstGizmos.Add(gizmo2);
                 }
             }
@@ -168,7 +209,7 @@ namespace VUIE
                     if (curLoc.x + gizmo.GetWidth(inRect.width) > inRect.xMax)
                     {
                         curLoc.x = inRect.xMin;
-                        curLoc.y += Gizmo.Height + GizmoGridDrawer.GizmoSpacing.x;
+                        curLoc.y += Gizmo.Height + GizmoGridDrawer.GizmoSpacing.y + additionalSpacing.y;
                     }
 
                     var parms = new GizmoRenderParms
@@ -181,7 +222,7 @@ namespace VUIE
                     drawExtras?.Invoke(gizmo, new Rect(curLoc, new Vector2(gizmo.GetWidth(inRect.width), Gizmo.Height)));
                     ProcessGizmoState(gizmo, result, curLoc, ref mouseoverGiz, ref interactedGiz, ref floatMenuGiz, ref interactedEvent, onClicked);
                     GenUI.AbsorbClicksInRect(new Rect(curLoc.x, curLoc.y, gizmo.GetWidth(inRect.width), Gizmo.Height + GizmoGridDrawer.GizmoSpacing.y).ContractedBy(-12f));
-                    curLoc.x += gizmo.GetWidth(inRect.width) + GizmoGridDrawer.GizmoSpacing.x;
+                    curLoc.x += gizmo.GetWidth(inRect.width) + GizmoGridDrawer.GizmoSpacing.x + additionalSpacing.x;
                 }
 
             var x = curLoc.x;
@@ -195,7 +236,7 @@ namespace VUIE
                     if (rows > 1) x = inRect.x;
 
                     curLoc.x = x;
-                    curLoc.y += shrunkSize + 3f;
+                    curLoc.y += shrunkSize + 3f + additionalSpacing.y;
                 }
 
                 var parms = new GizmoRenderParms
@@ -207,7 +248,7 @@ namespace VUIE
                 drawExtras?.Invoke(command, new Rect(curLoc, Vector2.one * shrunkSize));
                 ProcessGizmoState(command, result, curLoc, ref mouseoverGiz, ref interactedGiz, ref floatMenuGiz, ref interactedEvent, onClicked);
                 GenUI.AbsorbClicksInRect(new Rect(curLoc.x, curLoc.y, shrunkSize, shrunkSize + 3f).ExpandedBy(3f));
-                curLoc.x += shrunkSize + 3f;
+                curLoc.x += shrunkSize + 3f + additionalSpacing.x;
             }
 
             onMouseOver?.Invoke(mouseoverGiz);
@@ -329,10 +370,10 @@ namespace VUIE
 
             public readonly List<Gizmo> tmpAllGizmos = new();
 
-            public void Init(IEnumerable<Gizmo> gizmos)
+            public void Init(IEnumerable<Gizmo> gizmos, bool sort = true)
             {
                 tmpAllGizmos.AddRange(gizmos);
-                tmpAllGizmos.SortStable(GizmoGridDrawer.SortByOrder);
+                if (sort) tmpAllGizmos.SortStable(GizmoGridDrawer.SortByOrder);
                 foreach (var gizmo in tmpAllGizmos)
                 {
                     var group = gizmoGroups.FirstOrDefault(g => g[0].GroupsWith(gizmo));

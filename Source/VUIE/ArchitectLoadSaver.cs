@@ -83,12 +83,14 @@ namespace VUIE
         public string EntDefName;
         public string Name;
         public List<DesignatorSaved> Elements;
+        public float Order;
 
         public void ExposeData()
         {
             Scribe_Values.Look(ref Type, "type");
             Scribe_Values.Look(ref Name, "name");
             Scribe_Values.Look(ref EntDefName, "entDef");
+            Scribe_Values.Look(ref Order, "order");
             Scribe_Collections.Look(ref Elements, "elements", LookMode.Deep);
         }
 
@@ -115,6 +117,8 @@ namespace VUIE
                     break;
             }
 
+            des.order = saved.Order;
+
             return des;
         }
 
@@ -122,7 +126,8 @@ namespace VUIE
         {
             var saved = new DesignatorSaved
             {
-                Type = des.GetType().FullName
+                Type = des.GetType().FullName,
+                Order = des.order
             };
 
             switch (des)

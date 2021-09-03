@@ -10,8 +10,11 @@ namespace VUIE
     public class Dialog_ConfigureArchitect : Window
     {
         private readonly List<Designator> available = new();
-        private readonly QuickSearchWidget availableSearch;
-        private readonly DragDropManager<Designator> dragDropManager;
+        private readonly QuickSearchWidget availableSearch = new();
+        private readonly DragDropManager<Designator> desDragDropManager = new((des, topLeft) => des.GizmoOnGUI(topLeft, Gizmo.Height, new GizmoRenderParms()));
+
+        private readonly DragDropManager<ArchitectCategoryTab> tabDragDropManager = new((tab, topLeft) =>
+            Widgets.ButtonTextSubtle(new Rect(topLeft, new Vector2(100f, 33f)), tab.def.LabelCap, 0f, 8f, null, new Vector2(-1f, -1f)));
 
         private readonly List<Designator> unassigned = new();
         private int curAvailablePage;
@@ -24,13 +27,12 @@ namespace VUIE
         private bool setPageWhileSearching;
 
         private Vector2 tabListScrollPos = Vector2.zero;
+        private int tabMouseoverIdx = -1;
 
         public Dialog_ConfigureArchitect()
         {
             doCloseButton = true;
             doCloseX = false;
-            dragDropManager = new DragDropManager<Designator>(DrawDragged);
-            availableSearch = new QuickSearchWidget();
             foreach (var type in typeof(Designator).AllSubclassesNonAbstract()
                 .Where(type => type != typeof(Designator_Dropdown) && type != typeof(Designator_Group) && !typeof(Designator_Install).IsAssignableFrom(type)))
                 if (type == typeof(Designator_Build))
@@ -41,6 +43,8 @@ namespace VUIE
                 else
                     available.Add((Designator) Activator.CreateInstance(type));
         }
+
+        public static Vector2 AdditionalSpacing => new(10f, 0);
 
         public override Vector2 InitialSize => new(UI.screenWidth - 100f, UI.screenHeight - 100f);
 
@@ -60,11 +64,6 @@ namespace VUIE
                 module.SavedStates[module.ActiveIndex] = ArchitectLoadSaver.SaveState(module.SavedStates[module.ActiveIndex].Name);
         }
 
-        private static void DrawDragged(Designator dragee, Vector2 topLeft)
-        {
-            dragee.GizmoOnGUI(topLeft, Gizmo.Height, new GizmoRenderParms());
-        }
-
         public override void DoWindowContents(Rect inRect)
         {
             var tabListRect = inRect.LeftPartPixels(120f);
@@ -80,16 +79,36 @@ namespace VUIE
             if (selectedCategoryTab != null)
             {
                 var flag = false;
-                GizmoDrawer.DrawGizmos(selectedCategoryTab.def.AllResolvedDesignators, gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), false, (giz, topLeft) =>
+                gizmoRect = gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x);
+                var gizmos = selectedCategoryTab.def.AllResolvedDesignators.Cast<Gizmo>().ToList();
+                gizmos.SortStable(GizmoGridDrawer.SortByOrder);
+                Placeholder placeholder = null;
+                if (desDragDropManager.DraggingNow && Mouse.IsOver(gizmoRect))
+                {
+                    var insertBefore = GizmoDrawer.Format(gizmos, gizmoRect, false, AdditionalSpacing)
+                        .FirstOrFallback(
+                            i => Mouse.IsOver(new Rect(i.Item1.x - GizmoGridDrawer.GizmoSpacing.x - AdditionalSpacing.x, i.Item1.y,
+                                GizmoGridDrawer.GizmoSpacing.x + AdditionalSpacing.x, i.Item1.height)),
+                            (Rect.zero, null)).Item2;
+                    if (insertBefore is not null)
+                    {
+                        var idx = gizmos.IndexOf(insertBefore) + 1;
+                        gizmos.Insert(idx,
+                            placeholder = new Placeholder((insertBefore.order + (idx == gizmos.Count - 1 ? insertBefore.order + 2 : gizmos[idx + 1].order)) / 2,
+                                desDragDropManager.Dragging.GetWidth(gizmoRect.width)));
+                    }
+                }
+
+                GizmoDrawer.DrawGizmos(gizmos, gizmoRect, false, (giz, _) =>
                 {
                     if (giz is Designator_Dropdown or Designator_Group) selected = (Designator) giz;
                     return true;
-                }, useHotkeys: false, drawExtras: (gizmo, rect) =>
+                }, useHotkeys: false, additionalSpacing: AdditionalSpacing, drawExtras: (gizmo, rect) =>
                 {
-                    if (dragDropManager.TryStartDrag(gizmo as Designator, rect))
+                    if (desDragDropManager.TryStartDrag(gizmo as Designator, rect))
                         selectedCategoryTab.def.AllResolvedDesignators.Remove(gizmo as Designator);
                     else
-                        dragDropManager.DropLocation(rect, des =>
+                        desDragDropManager.DropLocation(rect, des =>
                         {
                             Widgets.DrawHighlight(rect);
                             flag = true;
@@ -98,6 +117,11 @@ namespace VUIE
                             if (des is Designator_Group) return false;
                             if (gizmo is Designator_Group group)
                                 group.Add(des);
+                            else if (gizmo is Placeholder)
+                            {
+                                des.order = gizmo.order;
+                                selectedCategoryTab.def.AllResolvedDesignators.Insert(gizmos.IndexOf(gizmo), des);
+                            }
                             else
                                 Dialog_TextEntry.GetString(str =>
                                 {
@@ -109,9 +133,15 @@ namespace VUIE
                         });
                 });
                 if (!flag)
-                    dragDropManager.DropLocation(gizmoRect, des => Widgets.DrawHighlight(gizmoRect), des =>
+                    desDragDropManager.DropLocation(gizmoRect, des => Widgets.DrawHighlight(gizmoRect), des =>
                     {
-                        selectedCategoryTab.def.AllResolvedDesignators.Add(des);
+                        if (placeholder != null)
+                        {
+                            des.order = placeholder.order;
+                            selectedCategoryTab.def.AllResolvedDesignators.Insert(gizmos.IndexOf(placeholder), des);
+                        }
+                        else selectedCategoryTab.def.AllResolvedDesignators.Add(des);
+
                         return true;
                     });
             }
@@ -132,9 +162,9 @@ namespace VUIE
                     GizmoDrawer.DrawGizmos(children, selectedRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), false, (giz, topLeft) => true, useHotkeys: false,
                         drawExtras: (gizmo, rect) =>
                         {
-                            if (dragDropManager.TryStartDrag(gizmo as Designator, rect)) children.Remove(gizmo as Designator);
+                            if (desDragDropManager.TryStartDrag(gizmo as Designator, rect)) children.Remove(gizmo as Designator);
                         });
-                    dragDropManager.DropLocation(selectedRect, _ => Widgets.DrawHighlight(selectedRect), des =>
+                    desDragDropManager.DropLocation(selectedRect, _ => Widgets.DrawHighlight(selectedRect), des =>
                     {
                         children.Add(des);
                         return true;
@@ -144,7 +174,7 @@ namespace VUIE
 
             DoUnassignedList(inRect.TopHalf().ContractedBy(7f));
             DoAvailable(inRect.BottomHalf().ContractedBy(7f));
-            dragDropManager.DragDropOnGUI(des => unassigned.Add(des));
+            desDragDropManager.DragDropOnGUI(des => unassigned.Add(des));
         }
 
         private void DoAvailable(Rect inRect)
@@ -157,7 +187,7 @@ namespace VUIE
             GizmoDrawer.DrawGizmosWithPages(available, ref curAvailablePage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) => true,
                 drawExtras: (giz, rect) =>
                 {
-                    if (giz is Designator des && dragDropManager.TryStartDrag(des, rect))
+                    if (giz is Designator des && desDragDropManager.TryStartDrag(des, rect))
                     {
                         if (giz is Designator_Build build)
                             available[available.IndexOf(des)] = new Designator_Build(build.entDef);
@@ -165,8 +195,8 @@ namespace VUIE
                     }
                 }, useHotkeys: false, searchWidget: availableSearch, jump: !setPageWhileSearching);
             if (oldPage != curAvailablePage && availableSearch.filter.Active) setPageWhileSearching = true;
-            if (dragDropManager.DraggingNow) TooltipHandler.TipRegionByKey(inRect, "VUIE.Architect.DropDelete");
-            dragDropManager.DropLocation(inRect, _ => Widgets.DrawHighlight(inRect), _ => true);
+            if (desDragDropManager.DraggingNow) TooltipHandler.TipRegionByKey(inRect, "VUIE.Architect.DropDelete");
+            desDragDropManager.DropLocation(inRect, _ => Widgets.DrawHighlight(inRect), _ => true);
         }
 
         private void DoUnassignedList(Rect inRect)
@@ -177,9 +207,9 @@ namespace VUIE
             GizmoDrawer.DrawGizmosWithPages(unassigned, ref curUnassignedPage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) => true,
                 drawExtras: (giz, rect) =>
                 {
-                    if (dragDropManager.TryStartDrag(giz as Designator, rect)) unassigned.Remove(giz as Designator);
+                    if (desDragDropManager.TryStartDrag(giz as Designator, rect)) unassigned.Remove(giz as Designator);
                 }, useHotkeys: false);
-            dragDropManager.DropLocation(inRect, des => Widgets.DrawHighlight(inRect), des =>
+            desDragDropManager.DropLocation(inRect, des => Widgets.DrawHighlight(inRect), des =>
             {
                 unassigned.Add(des);
                 return true;
@@ -193,18 +223,32 @@ namespace VUIE
             inRect.yMax += 50f;
             Widgets.DrawMenuSection(inRect);
             Widgets.BeginScrollView(inRect, ref tabListScrollPos, viewRect);
+            var curY = viewRect.y;
             for (var i = 0; i < ArchitectCategoryTabs.Count; i++)
             {
                 var tab = ArchitectCategoryTabs[i];
-                var rect = new Rect(viewRect.x, viewRect.y + i * 32f, viewRect.width, 33f);
-                dragDropManager.DropLocation(rect, des => selectedCategoryTab = tab, des =>
+                var rect = new Rect(viewRect.x, curY, viewRect.width, 32f);
+                curY += 32f;
+                if (tabDragDropManager.DraggingNow && Mouse.IsOver(rect))
+                {
+                    tabMouseoverIdx = ArchitectCategoryTabs.IndexOf(tab);
+                    rect.y += 32f;
+                    curY += 32f;
+                }
+
+
+                desDragDropManager.DropLocation(rect, des => selectedCategoryTab = tab, des =>
                 {
                     selectedCategoryTab.def.AllResolvedDesignators.Add(des);
                     return true;
                 });
                 string label = tab.def.LabelCap;
-                if (Widgets.ButtonTextSubtle(rect.LeftPartPixels(rect.width - rect.height), label, 0f, 8f, SoundDefOf.Mouseover_Category, new Vector2(-1f, -1f)))
+                var buttonRect = rect.LeftPartPixels(rect.width - rect.height);
+                if (!desDragDropManager.DraggingNow && tabDragDropManager.TryStartDrag(tab, buttonRect))
+                    ArchitectCategoryTabs.Remove(tab);
+                else if (Widgets.ButtonTextSubtle(buttonRect, label, 0f, 8f, SoundDefOf.Mouseover_Category, new Vector2(-1f, -1f)))
                     selectedCategoryTab = tab;
+
 
                 if (Widgets.ButtonImage(rect.RightPartPixels(rect.height), Widgets.CheckboxOffTex))
                 {
@@ -214,6 +258,16 @@ namespace VUIE
 
                 if (selectedCategoryTab != tab) UIHighlighter.HighlightOpportunity(rect, tab.def.cachedHighlightClosedTag);
             }
+
+            tabDragDropManager.DropLocation(viewRect, null, tab =>
+            {
+                ArchitectCategoryTabs.Insert(tabMouseoverIdx, tab);
+                tabMouseoverIdx = -1;
+                return true;
+            });
+
+            tabDragDropManager.DragDropOnGUI(tab => ArchitectCategoryTabs.Add(tab));
+            Widgets.EndScrollView();
 
             if (Widgets.ButtonText(addRect, "VUIE.Add".Translate()))
                 Dialog_TextEntry.GetString(str =>
@@ -226,8 +280,21 @@ namespace VUIE
                     catDef.ResolveDesignators();
                     ArchitectCategoryTabs.Add(new ArchitectCategoryTab(catDef, ((MainTabWindow_Architect) MainButtonDefOf.Architect.TabWindow).quickSearchWidget.filter));
                 });
+        }
 
-            Widgets.EndScrollView();
+        public class Placeholder : Gizmo
+        {
+            private readonly float width;
+
+            public Placeholder(float order, float width)
+            {
+                this.order = order;
+                this.width = width;
+            }
+
+            public override GizmoResult GizmoOnGUI(Vector2 topLeft, float maxWidth, GizmoRenderParms parms) => new(GizmoState.Clear);
+
+            public override float GetWidth(float maxWidth) => Mathf.Min(width, maxWidth);
         }
     }
 }

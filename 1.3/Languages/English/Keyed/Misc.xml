@@ -10,4 +10,6 @@
     <VUIE.Moods.Neutral>Feeling indifferent</VUIE.Moods.Neutral>
     <VUIE>Vanilla UI Expanded</VUIE>
     <VUIE.DateTiny>{0}h {1}/{2}/{3}</VUIE.DateTiny>
+    <VUIE.Minimize>Minimize</VUIE.Minimize>
+    <VUIE.Maximizie>Maximize</VUIE.Maximizie>
 </LanguageData>

@@ -61,9 +61,9 @@ namespace VUIE
             base.DoSettingsWindowContents(inRect);
             var listing = new Listing_Standard();
             listing.Begin(inRect);
-            if (listing.ButtonText("VUIE.Archictect.Open".Translate())) Find.WindowStack.Add(new Dialog_ConfigureArchitect());
+            if (Current.ProgramState == ProgramState.Playing && listing.ButtonText("VUIE.Architect.Open".Translate())) Find.WindowStack.Add(new Dialog_ConfigureArchitect());
             listing.GapLine();
-            listing.Label("VUIE.Archictect.GroupDisplay".Translate() + ":");
+            listing.Label("VUIE.Architect.GroupDisplay".Translate() + ":");
             listing.Indent();
             listing.ColumnWidth -= 12f;
             if (listing.RadioButton("VUIE.Architect.GroupDisplay.SquareGrid".Translate(), GroupDisplay == GroupDisplayType.SquareGrid, 0f,
@@ -114,11 +114,21 @@ namespace VUIE
                 }
 
                 row.Gap(3f);
-                if (row.ButtonText("VUIE.Remove".Translate())) SavedStates.Remove(state);
+                if (row.ButtonText("VUIE.Remove".Translate()))
+                {
+                    SavedStates.Remove(state);
+                    if (ActiveIndex >= SavedStates.Count) ActiveIndex = SavedStates.Count - 1;
+                }
+
+                row.Gap(3f);
+                if (row.ButtonText("VUIE.Export".Translate())) Find.WindowStack.Add(new Dialog_ArchitectList_Export(state));
             }
 
             listing.Gap(6f);
-            if (listing.ButtonText("VUIE.Architect.AddConfig".Translate())) Dialog_TextEntry.GetString(str => SavedStates.Add(ArchitectLoadSaver.SaveState(str)));
+            var butRect = listing.GetRect(30f);
+            if (Widgets.ButtonText(butRect.LeftHalf(), "VUIE.Architect.AddConfig".Translate()))
+                Dialog_TextEntry.GetString(str => SavedStates.Add(ArchitectLoadSaver.SaveState(str)));
+            if (Widgets.ButtonText(butRect.RightHalf(), "VUIE.Import".Translate())) Find.WindowStack.Add(new Dialog_ArchitectList_Import(state => SavedStates.Add(state)));
 
             listing.End();
         }

@@ -8,22 +8,13 @@ namespace VUIE
     {
         private readonly Action<T, Vector2> drawDragged;
         private T active;
-        private T dragged;
         private Vector2 dragOffset;
         private Vector3 lastClickPos;
 
-        public DragDropManager(Action<T, Vector2> drawDragged)
-        {
-            this.drawDragged = drawDragged;
-        }
+        public DragDropManager(Action<T, Vector2> drawDragged) => this.drawDragged = drawDragged;
 
-        public bool DraggingNow => dragged != null;
-
-        public void StartDrag(T draggee, Vector2 topLeft)
-        {
-            dragged = draggee;
-            dragOffset = topLeft - UI.MousePositionOnUIInverted;
-        }
+        public bool DraggingNow => Dragging != null;
+        public T Dragging { get; private set; }
 
         public bool TryStartDrag(T draggee, Rect rect)
         {
@@ -38,7 +29,8 @@ namespace VUIE
 
             if (Input.GetMouseButton(0) && (lastClickPos - Input.mousePosition).sqrMagnitude > Widgets.DragStartDistanceSquared && Equals(draggee, active))
             {
-                StartDrag(draggee, rect.position);
+                Dragging = draggee;
+                dragOffset = rect.position - UI.MousePositionOnUIInverted;
                 return true;
             }
 
@@ -47,29 +39,27 @@ namespace VUIE
 
         public void DropLocation(Rect rect, Action<T> onOver, Func<T, bool> onDrop)
         {
-            if (Mouse.IsOver(rect) && dragged != null)
+            if (Mouse.IsOver(rect) && Dragging != null)
             {
-                onOver(dragged);
-                if (!Input.GetMouseButton(0) && onDrop(dragged))
+                onOver?.Invoke(Dragging);
+                if (!Input.GetMouseButton(0) && onDrop(Dragging))
                 {
                     dragOffset = Vector2.zero;
-                    dragged = default;
+                    Dragging = default;
                 }
             }
         }
 
         public void DragDropOnGUI(Action<T> onDragStop)
         {
-            if (dragged == null) return;
+            if (Dragging == null) return;
             if (Input.GetMouseButton(0))
-            {
-                drawDragged(dragged, dragOffset + UI.MousePositionOnUIInverted);
-            }
+                drawDragged(Dragging, dragOffset + UI.MousePositionOnUIInverted);
             else
             {
-                onDragStop(dragged);
+                onDragStop(Dragging);
                 dragOffset = Vector2.zero;
-                dragged = default;
+                Dragging = default;
             }
         }
     }

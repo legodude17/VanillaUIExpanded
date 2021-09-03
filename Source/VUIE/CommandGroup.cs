@@ -45,7 +45,7 @@ namespace VUIE
             if (vanishIfMouseDistant &&
                 GenUI.DistFromRect(new Rect(0, 0, InitialSize.x, InitialSize.y).ExpandedBy(Gizmo.Height * 2), Event.current.mousePosition) > 95f) Close();
             if (closeFunc()) Close(false);
-            GizmoDrawer.DrawGizmos(elements, inRect, true, (gizmo, topLeft) =>
+            GizmoDrawer.DrawGizmos(elements, inRect, true, (gizmo, _) =>
             {
                 onChosen((Command) gizmo);
                 return false;

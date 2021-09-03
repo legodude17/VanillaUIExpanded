@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using HarmonyLib;
 using UnityEngine;
 using Verse;
 
@@ -17,14 +16,13 @@ namespace VUIE
         public Dialog_FloatMenuOptions(List<FloatMenuOption> opts)
         {
             options = opts;
-            var info1 = AccessTools.Field(typeof(FloatMenuOption), "shownItem");
             doCloseX = true;
             doCloseButton = false;
             closeOnClickedOutside = true;
             shownItems = new List<ThingDef>();
             foreach (var option in opts)
             {
-                var shown = (ThingDef) info1.GetValue(option);
+                var shown = option.shownItem;
                 if (option.extraPartWidth <= 0f && option.extraPartOnGUI == null && shown != null)
                 {
                     option.extraPartWidth = Widgets.InfoCardButtonSize + 7f;

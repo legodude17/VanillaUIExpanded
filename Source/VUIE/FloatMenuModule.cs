@@ -13,6 +13,7 @@ namespace VUIE
         public Dictionary<CallInfo, bool?> FloatMenuSettings = new();
         private Vector2 scrollPos;
         public bool ShowSwitchButtons = true;
+        public bool UseGrid = true;
         public override string Label => "VUIE.FloatMenus".Translate();
 
 
@@ -35,21 +36,23 @@ namespace VUIE
         {
             var outRect = new Rect(inRect.ContractedBy(15f));
             outRect.yMin += 10f;
-            var viewRect = new Rect(0f, 0f, outRect.width - 16f, Instance.FloatMenuSettings.Count * 150f + 50f);
+            var viewRect = new Rect(0f, 0f, outRect.width - 16f, FloatMenuSettings.Count * 150f + 50f);
             var listing = new Listing_Standard();
             Widgets.BeginScrollView(outRect, ref scrollPos, viewRect);
             listing.Begin(viewRect);
-            listing.CheckboxLabeled("VUIE.FloatMenus.ShowSwitch".Translate(), ref Instance.ShowSwitchButtons);
-            foreach (var setting in Instance.FloatMenuSettings.ToList())
+            listing.CheckboxLabeled("VUIE.FloatMenus.ShowSwitch".Translate(), ref ShowSwitchButtons);
+            listing.CheckboxLabeled("VUIE.FloatMenus.UseGrid".Translate(), ref UseGrid);
+            listing.GapLine();
+            foreach (var setting in FloatMenuSettings.ToList())
             {
                 listing.Label(setting.Key);
                 listing.Gap(4f);
                 listing.ColumnWidth -= 12f;
                 listing.Indent();
-                if (listing.RadioButton("VUIE.FloatMenus.ForceDialog".Translate(), setting.Value.HasValue && setting.Value.Value)) Instance.FloatMenuSettings[setting.Key] = true;
+                if (listing.RadioButton("VUIE.FloatMenus.ForceDialog".Translate(), setting.Value.HasValue && setting.Value.Value)) FloatMenuSettings[setting.Key] = true;
                 if (listing.RadioButton("VUIE.FloatMenus.ForceVanilla".Translate(), setting.Value.HasValue && !setting.Value.Value))
                     Instance.FloatMenuSettings[setting.Key] = false;
-                if (listing.RadioButton("VUIE.FloatMenus.Default".Translate(), !setting.Value.HasValue)) Instance.FloatMenuSettings[setting.Key] = null;
+                if (listing.RadioButton("VUIE.FloatMenus.Default".Translate(), !setting.Value.HasValue)) FloatMenuSettings[setting.Key] = null;
                 listing.ColumnWidth += 12f;
                 listing.Outdent();
                 listing.GapLine();
@@ -68,7 +71,10 @@ namespace VUIE
                 var res = Instance.FloatMenuSettings[key];
                 if (!res.HasValue && menu.options.Count > 30 || res.HasValue && res.Value)
                 {
-                    __instance.Add(new Dialog_FloatMenuOptions(menu.options, key));
+                    if (Instance.UseGrid && menu.options.All(opt => opt.shownItem is not null))
+                        __instance.Add(new Dialog_FloatMenuGrid(menu.options, key));
+                    else
+                        __instance.Add(new Dialog_FloatMenuOptions(menu.options, key));
                     return false;
                 }
             }
@@ -89,7 +95,7 @@ namespace VUIE
         {
             Scribe_Collections.Look(ref FloatMenuSettings, "floatMenu", LookMode.Deep, LookMode.Value);
             Scribe_Values.Look(ref ShowSwitchButtons, "showSwitch", true);
-            if (FloatMenuSettings == null) FloatMenuSettings = new Dictionary<CallInfo, bool?>();
+            FloatMenuSettings ??= new Dictionary<CallInfo, bool?>();
         }
 
         public struct CallInfo : IExposable

@@ -69,23 +69,30 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchitectExportImport.cs" />
     <Compile Include="ArchitectLoadSaver.cs" />
+    <Compile Include="ArchitectMainTabModule.cs" />
     <Compile Include="ArchitectModule.cs" />
     <Compile Include="ArchitectPresetDef.cs" />
     <Compile Include="BuildableGroupDef.cs" />
     <Compile Include="CommandGroup.cs" />
     <Compile Include="Designator_Group.cs" />
     <Compile Include="Dialog_ConfigureArchitect.cs" />
+    <Compile Include="Dialog_FloatMenuGrid.cs" />
     <Compile Include="Dialog_FloatMenuOptions.cs" />
     <Compile Include="Dialog_TextEntry.cs" />
     <Compile Include="DragDropManager.cs" />
+    <Compile Include="MainButtonModule.cs" />
     <Compile Include="FloatMenuModule.cs" />
     <Compile Include="HistoryTabModule.cs" />
     <Compile Include="MainTabWindow_Chat.cs" />
     <Compile Include="MessagesPageModule.cs" />
     <Compile Include="MiscModule.cs" />
+    <Compile Include="PawnColumnWorker_CopyPasteAssignment.cs" />
+    <Compile Include="PlaySettingsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TradeMenuModule.cs" />
+    <Compile Include="UIDefOf.cs" />
     <Compile Include="UIMod.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
