@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Defs>
+    <KeyBindingDef>
+        <category>MainTabs</category>
+        <defName>VUIE_CycleOverlay</defName>
+        <label>cycle overlay</label>
+        <defaultKeyCodeA>Keypad0</defaultKeyCodeA>
+    </KeyBindingDef>
+</Defs>

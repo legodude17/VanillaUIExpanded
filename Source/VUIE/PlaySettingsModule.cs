@@ -28,6 +28,7 @@ namespace VUIE
         public string iconPath;
         public bool showOnMap = true;
         public bool showOnWorld = true;
+        public bool visible;
         public Type workerClass = typeof(PlaySettingWorker);
 
         [Unsaved] private PlaySettingWorker workerInt;
@@ -41,7 +42,7 @@ namespace VUIE
         public bool Active;
         public PlaySettingDef def;
         public PlaySettingWorker(PlaySettingDef parent) => def = parent;
-        public virtual bool ShouldDraw(bool worldView) => worldView ? def.showOnWorld : def.showOnMap;
+        public virtual bool ShouldDraw(bool worldView) => def.visible && worldView ? def.showOnWorld : def.showOnMap;
 
         public virtual void Draw(WidgetRow row)
         {

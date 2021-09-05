@@ -42,6 +42,7 @@ namespace VUIE
                 var buttons = __instance.allButtonsInOrder.ListFullCopy();
                 __instance.allButtonsInOrder.Clear();
                 foreach (var defName in order) __instance.allButtonsInOrder.Add(buttons.First(def => def.defName == defName));
+                foreach (var def in buttons.Except(__instance.allButtonsInOrder)) __instance.allButtonsInOrder.Add(def);
             }
 
             if (minimized is not null)

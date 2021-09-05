@@ -11,17 +11,18 @@ namespace VUIE
     {
         public static UISettings Settings;
         private static List<Module> modules;
+        public static Harmony Harm;
 
         private Module curModule;
         private List<TabRecord> tabs;
 
         public UIMod(ModContentPack content) : base(content)
         {
-            var harm = new Harmony("vanillaexpanded.ui");
+            Harm = new Harmony("vanillaexpanded.ui");
             modules = typeof(Module).AllSubclassesNonAbstract().Select(type => (Module) Activator.CreateInstance(type)).ToList();
             curModule = modules.First();
-            Settings = GetSettings<UISettings>();
-            foreach (var module in modules) module.DoPatches(harm);
+            LongEventHandler.ExecuteWhenFinished(() => Settings = GetSettings<UISettings>());
+            foreach (var module in modules) module.DoPatches(Harm);
         }
 
         public static IEnumerable<Module> AllModules => modules;

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Defs>
+    <VUIE.OverlayDef>
+        <defName>Roof</defName>
+        <label>toggle roofs</label>
+        <description>.</description>
+        <iconPath>UI/Buttons/ShowRoofOverlay</iconPath>
+        <workerClass>VUIE.OverlayWorker_Roof</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Fertility</defName>
+        <label>toggle fertility</label>
+        <description>.</description>
+        <iconPath>UI/Buttons/ShowFertilityOverlay</iconPath>
+        <workerClass>VUIE.OverlayWorker_Fertility</workerClass>
+        <autoshowOn>
+            <li>Designator_ZoneAdd_Growing</li>
+        </autoshowOn>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Terrain</defName>
+        <label>toggle terrain affordances</label>
+        <description>.</description>
+        <iconPath>UI/Buttons/ShowTerrainAffordanceOverlay</iconPath>
+        <workerClass>VUIE.OverlayWorker_Terrain</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Power</defName>
+        <label>toggle power grid</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Power</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Gas</defName>
+        <label>toggle gas grid</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Gas</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Sewage</defName>
+        <label>toggle water grid</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Sewage</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Air</defName>
+        <label>toggle air-con grid</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Air</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Beauty</defName>
+        <label>toggle beauty overlay</label>
+        <description>.</description>
+        <iconPath>UI/Buttons/ShowBeauty</iconPath>
+        <workerClass>VUIE.OverlayWorker_Beauty</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Lighting</defName>
+        <label>toggle lighting overlay</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Lighting</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>WalkSpeed</defName>
+        <label>toggle path cost overlay</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Usage</defName>
+        <label>toggle usage overlay</label>
+        <description>Shows how often your pawns are in each cell</description>
+        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Cleanliness</defName>
+        <label>toggle cleanliness overlay</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>PlantGrowth</defName>
+        <label>toggle plant growth overlay</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Auto</workerClass>
+        <autoshowOn>
+            <li>Designator_PlantsCut</li>
+            <li>Designator_PlantsHarvest</li>
+            <li>Designator_PlantsHarvestWood</li>
+        </autoshowOn>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Smoothable</defName>
+        <label>toggle smoothable overlay</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Auto</workerClass>
+        <autoshowOn>
+            <li>Designator_SmoothSurface</li>
+        </autoshowOn>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>WindBlockers</defName>
+        <label>toggle wind blocker overlay</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_WindBlocker</workerClass>
+    </VUIE.OverlayDef>
+</Defs>

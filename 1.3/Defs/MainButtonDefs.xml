@@ -9,4 +9,12 @@
     <order>75</order>
     <closesWorldView>true</closesWorldView>
   </MainButtonDef>
+  <MainButtonDef>
+    <defName>VUIE_Overlays</defName>
+    <label>overlays</label>
+    <description>View and toggle various overlays.</description>
+    <tabWindowClass>VUIE.MainTabWindow_Overlays</tabWindowClass>
+    <order>77</order>
+    <closesWorldView>true</closesWorldView>
+  </MainButtonDef>
 </Defs>

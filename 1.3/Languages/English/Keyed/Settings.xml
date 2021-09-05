@@ -26,4 +26,12 @@
     <VUIE.FloatMenus.Default>Default (Dialog when >30 options)</VUIE.FloatMenus.Default>
     <VUIE.Export>Export</VUIE.Export>
     <VUIE.Import>Import</VUIE.Import>
+    <VUIE.Overlays>Overlays</VUIE.Overlays>
+    <VUIE.Enabled>Enabled at all</VUIE.Enabled>
+    <VUIE.Overlays.Move>Move Overlays to new tab</VUIE.Overlays.Move>
+    <VUIE.Overlays.ShowNumbers>Show numbers</VUIE.Overlays.ShowNumbers>
+    <VUIE.Overlays.ShowNumbers.Desc>If false, show colored cells like the fertility overlay. If true, show numbers near the cursor like the vanilla beauty overlay.</VUIE.Overlays.ShowNumbers.Desc>
+    <VUIE.Overlays.UseColor>Use glow color</VUIE.Overlays.UseColor>
+    <VUIE.Overlays.UseColor.Desc>If false, color will be between green and red, the brighter it is the more green.</VUIE.Overlays.UseColor.Desc>
+    <VUIE.Overlays.Autoshow>Show automatically</VUIE.Overlays.Autoshow>
 </LanguageData>

@@ -76,6 +76,7 @@
     <Compile Include="ArchitectPresetDef.cs" />
     <Compile Include="BuildableGroupDef.cs" />
     <Compile Include="CommandGroup.cs" />
+    <Compile Include="CoverageOverlays.cs" />
     <Compile Include="Designator_Group.cs" />
     <Compile Include="Dialog_ConfigureArchitect.cs" />
     <Compile Include="Dialog_FloatMenuGrid.cs" />
@@ -86,11 +87,16 @@
     <Compile Include="FloatMenuModule.cs" />
     <Compile Include="HistoryTabModule.cs" />
     <Compile Include="MainTabWindow_Chat.cs" />
+    <Compile Include="MainTabWindow_Overlays.cs" />
+    <Compile Include="MapMeshFlagExt.cs" />
     <Compile Include="MessagesPageModule.cs" />
     <Compile Include="MiscModule.cs" />
+    <Compile Include="OverlayModule.cs" />
+    <Compile Include="OverlayWorkers.cs" />
     <Compile Include="PawnColumnWorker_CopyPasteAssignment.cs" />
     <Compile Include="PlaySettingsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SectionLayers.cs" />
     <Compile Include="TradeMenuModule.cs" />
     <Compile Include="UIDefOf.cs" />
     <Compile Include="UIMod.cs" />
