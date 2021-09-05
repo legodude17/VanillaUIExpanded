@@ -93,6 +93,7 @@
     <Compile Include="MiscModule.cs" />
     <Compile Include="OverlayModule.cs" />
     <Compile Include="OverlayWorkers.cs" />
+    <Compile Include="OverlayWorkers_Dubs.cs" />
     <Compile Include="PawnColumnWorker_CopyPasteAssignment.cs" />
     <Compile Include="PlaySettingsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

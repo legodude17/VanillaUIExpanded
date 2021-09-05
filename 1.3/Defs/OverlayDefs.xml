@@ -40,12 +40,14 @@
         <defName>Sewage</defName>
         <label>toggle water grid</label>
         <description>.</description>
+        <iconPath>DBH/UI/Plumbing</iconPath>
         <workerClass>VUIE.OverlayWorker_Sewage</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Air</defName>
         <label>toggle air-con grid</label>
         <description>.</description>
+        <iconPath>DBH/UI/coolingPipe</iconPath>
         <workerClass>VUIE.OverlayWorker_Air</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
@@ -104,5 +106,61 @@
         <label>toggle wind blocker overlay</label>
         <description>.</description>
         <workerClass>VUIE.OverlayWorker_WindBlocker</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>HighVoltage</defName>
+        <label>toggle high-voltage wire grid</label>
+        <description>.</description>
+        <iconPath>Rimatomics/UI/HighVoltage</iconPath>
+        <workerClass>VUIE.OverlayWorker_Sewage</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Cooling</defName>
+        <label>toggle cooling grid</label>
+        <description>.</description>
+        <iconPath>Rimatomics/UI/CoolingPipe</iconPath>
+        <workerClass>VUIE.OverlayWorker_Cooling</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Steam</defName>
+        <label>toggle steam grid</label>
+        <description>.</description>
+        <iconPath>Rimatomics/UI/HeatPipe</iconPath>
+        <workerClass>VUIE.OverlayWorker_Steam</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>ColdWater</defName>
+        <label>toggle cold water grid</label>
+        <description>.</description>
+        <iconPath>Rimatomics/UI/WaterPipe</iconPath>
+        <workerClass>VUIE.OverlayWorker_ColdWater</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Loom</defName>
+        <label>toggle reactor loom grid</label>
+        <description>.</description>
+        <iconPath>Rimatomics/UI/Loom_Atlas</iconPath>
+        <workerClass>VUIE.OverlayWorker_Loom</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>OilPipes</defName>
+        <label>toggle oil pipe grid</label>
+        <description>.</description>
+        <iconPath>Rimefeller/UI/Plumbing</iconPath>
+        <workerClass>VUIE.OverlayWorker_Oil</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>OilGrid</defName>
+        <label>toggle oil grid</label>
+        <description>.</description>
+        <iconPath>Rimefeller/UI/OilSpill</iconPath>
+        <workerClass>VUIE.OverlayWorker_OilGrid</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>WaterGrid</defName>
+        <label>toggle water grid</label>
+        <description>.</description>
+        <iconPath>DBH/UI/waste_water</iconPath>
+        <workerClass>VUIE.OverlayWorker_WaterGrid</workerClass>
     </VUIE.OverlayDef>
 </Defs>

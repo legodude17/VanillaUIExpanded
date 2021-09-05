@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -142,6 +141,11 @@ namespace VUIE
             return base.Init(def);
         }
 
+        public override void DoSettings(Listing_Standard listing)
+        {
+            if (Active) base.DoSettings(listing);
+        }
+
         protected virtual void ModInit(OverlayDef def)
         {
         }
@@ -167,81 +171,9 @@ namespace VUIE
         }
     }
 
-    public abstract class OverlayWorker_DBH : OverlayWorker_Mod
-    {
-        private static Type sectionLayer;
-        public static Dictionary<int, bool> PipeTypesActive = new();
-        private bool patched;
-        protected override string ModName => "Dubs Bad Hygiene";
-
-        public abstract int PipeType { get; }
-
-        public override bool Visible
-        {
-            get => PipeTypesActive.TryGetValue(PipeType, out var result) && result;
-            set => PipeTypesActive[PipeType] = value;
-        }
-
-        public override void ExposeData()
-        {
-            base.ExposeData();
-            Scribe_Collections.Look(ref PipeTypesActive, "pipeTypes", LookMode.Value, LookMode.Value);
-        }
-
-        protected override void ModInit(OverlayDef def)
-        {
-            base.ModInit(def);
-            if (patched) return;
-            sectionLayer = AccessTools.TypeByName("DubsBadHygiene.SectionLayer_PipeOverlay");
-            try
-            {
-                UIMod.Harm.Patch(AccessTools.Method(sectionLayer, "DrawLayer"), transpiler: new HarmonyMethod(GetType(), nameof(Transpile)));
-            }
-            catch (Exception e)
-            {
-                Log.Error("Error while patching: " + e);
-            }
-
-            patched = true;
-        }
-
-        public static bool ShouldShow(int pipeType) => PipeTypesActive.TryGetValue(pipeType, out var result) && result;
-
-        public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
-        {
-            var list = instructions.ToList();
-            var idx1 = list.FindIndex(ins => ins.opcode == OpCodes.Ret);
-            var list2 = list.GetRange(idx1 - 4, 4);
-            var labels = list[idx1].ExtractLabels();
-            var label1 = generator.DefineLabel();
-            list[idx1].labels.Add(label1);
-            list.InsertRange(idx1, new[]
-            {
-                new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labels),
-                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(sectionLayer, "mode")),
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(OverlayWorker_DBH), nameof(ShouldShow))),
-                new CodeInstruction(OpCodes.Brfalse, label1)
-            });
-            var idx2 = list.FindIndex(idx1, ins => ins.Branches(out _));
-            list.InsertRange(idx2 + 1, list2.Select(ins => ins.Clone()));
-            return list;
-        }
-    }
-
-    public class OverlayWorker_Sewage : OverlayWorker_DBH
-    {
-        public override int PipeType => 0;
-    }
-
-    public class OverlayWorker_Air : OverlayWorker_DBH
-    {
-        public override int PipeType => 1;
-    }
-
     public class OverlayWorker_Numbers : OverlayWorker
     {
         private readonly List<IntVec3> cachedRelevantCells = new();
-        private readonly List<Room> visibleRooms = new();
         private IntVec3 cachedCell;
         private Section cachedSection;
         private SectionLayer_Overlay sectionLayer;
