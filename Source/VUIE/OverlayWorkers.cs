@@ -124,15 +124,15 @@ namespace VUIE
         }
     }
 
-    public class OverlayWorker_Mod : OverlayWorker
+    public abstract class OverlayWorker_Mod : OverlayWorker
     {
         protected bool Active;
-        protected virtual string ModName => "";
+        protected abstract string ModName { get; }
         public override bool DrawToggle => Active && base.DrawToggle;
 
         public override OverlayWorker Init(OverlayDef def)
         {
-            if (!ModName.NullOrEmpty() && ModLister.HasActiveModWithName(ModName))
+            if (ModLister.HasActiveModWithName(ModName))
             {
                 Active = true;
                 ModInit(def);

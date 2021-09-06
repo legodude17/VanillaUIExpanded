@@ -34,4 +34,8 @@
     <VUIE.Overlays.UseColor>Use glow color</VUIE.Overlays.UseColor>
     <VUIE.Overlays.UseColor.Desc>If false, color will be between green and red, the brighter it is the more green.</VUIE.Overlays.UseColor.Desc>
     <VUIE.Overlays.Autoshow>Show automatically</VUIE.Overlays.Autoshow>
+    <VUIE.Debug.Favorites>Do favorite debug actions</VUIE.Debug.Favorites>
+    <VUIE.Debug.ActionMenu>Debug Action Menu</VUIE.Debug.ActionMenu>
+    <VUIE.Debug.HideNotMatch>Hide items that don't match search</VUIE.Debug.HideNotMatch>
+    <VUIE.Debug.HideNotMatch.Desc>By default, rimworld simply highlights search matches in debug action menus. With this setting on, they will instead be completely hidden. May increase performance when searching with lots of options.</VUIE.Debug.HideNotMatch.Desc>
 </LanguageData>

@@ -19,13 +19,16 @@ namespace VUIE
 
         public override bool Visible
         {
-            get => sectionLayerTypeCached?.FullName is not null && PipeTypesActive.TryGetValue(sectionLayerTypeCached.FullName, out var types) &&
+            get => sectionLayerTypeCached?.FullName is not null && PipeTypesActive is not null && PipeTypesActive.TryGetValue(sectionLayerTypeCached.FullName, out var types) &&
+                   types is not null &&
                    types.TryGetValue(PipeType, out var result) && result;
             set
             {
                 if (sectionLayerTypeCached?.FullName is null) return;
                 if (!PipeTypesActive.ContainsKey(sectionLayerTypeCached.FullName)) return;
-                PipeTypesActive[sectionLayerTypeCached.FullName][PipeType] = value;
+                var types = PipeTypesActive[sectionLayerTypeCached.FullName];
+                if (types is null) return;
+                types[PipeType] = value;
             }
         }
 
@@ -33,11 +36,7 @@ namespace VUIE
         {
             base.ExposeData();
             Scribe_Collections.Look(ref PipeTypesActive, "pipeTypes", LookMode.Value, LookMode.Value);
-            foreach (var name in patched.Select(type => type.FullName).Except(PipeTypesActive.Keys))
-            {
-                Log.Message($"Adding {name} to list");
-                PipeTypesActive.Add(name, new Dictionary<int, bool>());
-            }
+            foreach (var name in patched.Select(type => type.FullName).Except(PipeTypesActive.Keys)) PipeTypesActive.Add(name, new Dictionary<int, bool>());
         }
 
         protected override void ModInit(OverlayDef def)
@@ -46,11 +45,7 @@ namespace VUIE
             sectionLayerTypeCached = SectionLayerType;
             if (patched.Contains(sectionLayerTypeCached)) return;
             patched.Add(sectionLayerTypeCached);
-            if (!PipeTypesActive.ContainsKey(sectionLayerTypeCached.FullName))
-            {
-                Log.Message($"Adding {sectionLayerTypeCached.FullName} to list");
-                PipeTypesActive.Add(sectionLayerTypeCached.FullName, new Dictionary<int, bool>());
-            }
+            if (!PipeTypesActive.ContainsKey(sectionLayerTypeCached.FullName)) PipeTypesActive.Add(sectionLayerTypeCached.FullName, new Dictionary<int, bool>());
 
             try
             {
@@ -63,12 +58,7 @@ namespace VUIE
             }
         }
 
-        public static bool ShouldShow(Type layerType, int pipeType)
-        {
-            Log.Message($"Getting with layerType={layerType},layerType.FullName={layerType.FullName},pipeType={pipeType}");
-            GenDebug.LogList(PipeTypesActive.Keys);
-            return PipeTypesActive[layerType.FullName].TryGetValue(pipeType, out var result) && result;
-        }
+        public static bool ShouldShow(Type layerType, int pipeType) => PipeTypesActive[layerType.FullName].TryGetValue(pipeType, out var result) && result;
 
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {

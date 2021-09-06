@@ -20,7 +20,7 @@ namespace VUIE
         {
             Harm = new Harmony("vanillaexpanded.ui");
             modules = typeof(Module).AllSubclassesNonAbstract().Select(type => (Module) Activator.CreateInstance(type)).ToList();
-            curModule = modules.First();
+            curModule = modules.First(mod => !mod.Label.NullOrEmpty());
             LongEventHandler.ExecuteWhenFinished(() => Settings = GetSettings<UISettings>());
             foreach (var module in modules) module.DoPatches(Harm);
         }

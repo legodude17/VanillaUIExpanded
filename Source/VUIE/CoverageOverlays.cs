@@ -189,6 +189,7 @@ namespace VUIE
 
         public override void Notify_BuildingChanged(Thing t)
         {
+            if (Find.CurrentMap is null) return;
             if (validator(t.def) && (!t.Spawned || validator2(t)))
                 base.Notify_BuildingChanged(t);
         }
