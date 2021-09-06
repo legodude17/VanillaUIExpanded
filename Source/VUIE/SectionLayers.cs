@@ -205,4 +205,63 @@ namespace VUIE
 
         public override bool ShowOnCell(IntVec3 c) => Map.thingGrid.ThingsListAtFast(c).Any(t => t.def.blockWind);
     }
+
+    public class SectionLayer_Wealth : SectionLayer_Overlay
+    {
+        public static Dictionary<Map, float[]> Grids = new();
+
+        private float max;
+
+        public SectionLayer_Wealth(Section section) : base(section)
+        {
+            relevantChangeTypes = MapMeshFlag.Buildings | MapMeshFlag.Terrain;
+            if (!Grids.ContainsKey(section.map)) Grids.Add(section.map, new float[section.map.cellIndices.NumGridCells]);
+        }
+
+        public override OverlayDef OverlayDef => OverlayDefOf.Wealth;
+
+        private static float ThingWealth(Thing t)
+        {
+            var num = 0f;
+            if (ThingRequestGroup.HaulableEver.Includes(t.def)) num += t.MarketValue * t.stackCount;
+            if (ThingRequestGroup.BuildingArtificial.Includes(t.def)) num += t.GetStatValue(StatDefOf.MarketValueIgnoreHp);
+            if (t is IThingHolder x and not (PassingShip or MapComponent or Pawn)) num += x.GetDirectlyHeldThings().Sum(ThingWealth);
+            return num;
+        }
+
+        public override void Regenerate()
+        {
+            foreach (var cell in section.CellRect) Grids[Map][Map.cellIndices.CellToIndex(cell)] = ValueForCellInt(cell);
+
+            max = Grids[Map].Max();
+
+            base.Regenerate();
+        }
+
+        private float ValueForCellInt(IntVec3 c) =>
+            WealthWatcher.cachedTerrainMarketValue[Map.terrainGrid.TerrainAt(c).index] + Map.thingGrid.ThingsListAtFast(c).Sum(ThingWealth);
+
+        public override float ValueForCell(IntVec3 c) => Grids[Map][Map.cellIndices.CellToIndex(c)];
+
+        public override Color ColorForCell(IntVec3 c) => Color.Lerp(Color.white, Color.green, Mathf.InverseLerp(0f, max, ValueForCell(c)));
+
+        public override bool ShowOnCell(IntVec3 c) => ValueForCell(c) > 0;
+    }
+
+    public class SectionLayer_Health : SectionLayer_Overlay
+    {
+        public SectionLayer_Health(Section section) : base(section) => relevantChangeTypes = MapMeshFlag.Buildings | MapMeshFlag.BuildingsDamage;
+
+        public override OverlayDef OverlayDef => OverlayDefOf.Health;
+
+        public override float ValueForCell(IntVec3 c)
+        {
+            var things = Map.thingGrid.ThingsListAtFast(c).Where(t => t.def.useHitPoints).ToList();
+            return things.Sum(t => t.HitPoints) / (float) things.Sum(t => t.MaxHitPoints);
+        }
+
+        public override Color ColorForCell(IntVec3 c) => Color.Lerp(Color.red, Color.green, ValueForCell(c));
+
+        public override bool ShowOnCell(IntVec3 c) => Map.edificeGrid[c] is not null || Map.thingGrid.ThingsListAtFast(c).Any(t => t.def.useHitPoints);
+    }
 }

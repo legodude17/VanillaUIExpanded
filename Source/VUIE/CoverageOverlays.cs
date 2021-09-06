@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using RimWorld;
@@ -12,6 +13,7 @@ namespace VUIE
     {
         public static Dictionary<ThingDef, (float, Color)> Coverers = new();
         public static Dictionary<ThingDef, OverlayDef> CoverageOverlayDefs = new();
+        public static Dictionary<Type, List<OverlayDef>> SpecialCoverageOverlays = new();
 
         static CoverageOverlays()
         {
@@ -48,6 +50,9 @@ namespace VUIE
                 DefGenerator.AddImpliedDef(def);
             }
 
+            foreach (var type in typeof(OverlayWorker_Coverage).AllSubclassesNonAbstract())
+                SpecialCoverageOverlays.Add(type, DefDatabase<OverlayDef>.AllDefs.Where(def => type.IsInstanceOfType(def.Worker)).ToList());
+
             UIMod.Harm.Patch(AccessTools.Method(typeof(Thing), nameof(Thing.SpawnSetup)), postfix: new HarmonyMethod(typeof(CoverageOverlays), nameof(BuildingCheck)));
             UIMod.Harm.Patch(AccessTools.Method(typeof(Thing), nameof(Thing.DeSpawn)), postfix: new HarmonyMethod(typeof(CoverageOverlays), nameof(BuildingCheck)));
             UIMod.Harm.Patch(AccessTools.PropertySetter(typeof(Game), nameof(Game.CurrentMap)), postfix: new HarmonyMethod(typeof(CoverageOverlays), nameof(PostMapChange)));
@@ -56,12 +61,14 @@ namespace VUIE
         public static void BuildingCheck(Thing __instance)
         {
             if (Find.CurrentMap == __instance.Map && CoverageOverlayDefs.TryGetValue(__instance.def, out var overlay))
-                (overlay.Worker as OverlayWorker_Coverage)?.Notify_BuildingChanged();
+                (overlay.Worker as OverlayWorker_Coverage)?.Notify_BuildingChanged(__instance);
+            foreach (var def in SpecialCoverageOverlays.Values.SelectMany(a => a)) (def.Worker as OverlayWorker_Coverage)?.Notify_BuildingChanged(__instance);
         }
 
         public static void PostMapChange()
         {
             foreach (var def in CoverageOverlayDefs.Values) (def.Worker as OverlayWorker_Coverage)?.Notify_ChangedMap();
+            foreach (var def in SpecialCoverageOverlays.Values.SelectMany(a => a)) (def.Worker as OverlayWorker_Coverage)?.Notify_ChangedMap();
         }
 
         public static void AddCoverer(ThingDef def, float? radius = null, Color? color = null)
@@ -74,17 +81,17 @@ namespace VUIE
 
     public class OverlayWorker_Coverage : OverlayWorker_Auto, ICellBoolGiver
     {
-        private readonly List<IntVec3> centers = new();
-        private readonly List<IntVec3> covered = new();
-        private readonly HashSet<int> coveredIndices = new();
+        protected readonly List<IntVec3> Centers = new();
+        protected readonly List<IntVec3> Covered = new();
+        protected readonly HashSet<int> CoveredIndices = new();
         public Color CoverageColor;
         public ThingDef CoverageDef;
         public float CoverageRange;
-        private CellBoolDrawer drawer;
+        protected CellBoolDrawer Drawer;
 
         public override bool CanShowNumbers => false;
 
-        public bool GetCellBool(int index) => coveredIndices.Contains(index);
+        public bool GetCellBool(int index) => CoveredIndices.Contains(index);
 
         public Color GetCellExtraColor(int index) => Color.white;
 
@@ -96,20 +103,20 @@ namespace VUIE
             return base.Init(def);
         }
 
-        public void Notify_ChangedMap()
+        public virtual void Notify_ChangedMap()
         {
             if (Find.CurrentMap is null)
             {
-                drawer = null;
-                covered.Clear();
+                Drawer = null;
+                Covered.Clear();
                 return;
             }
 
-            drawer = new CellBoolDrawer(this, Find.CurrentMap.Size.x, Find.CurrentMap.Size.z);
+            Drawer = new CellBoolDrawer(this, Find.CurrentMap.Size.x, Find.CurrentMap.Size.z);
             CacheCovered();
         }
 
-        public void Notify_BuildingChanged()
+        public virtual void Notify_BuildingChanged(Thing t)
         {
             CacheCovered();
         }
@@ -117,34 +124,131 @@ namespace VUIE
         public override void OverlayUpdate()
         {
             base.OverlayUpdate();
-            if (Visible && drawer is not null)
+            if (Visible && Drawer is not null)
             {
-                drawer.MarkForDraw();
-                if (covered.Count > 0) GenDraw.DrawFieldEdges(covered.ToList(), CoverageColor);
+                Drawer.MarkForDraw();
+                if (Covered.Count > 0) GenDraw.DrawFieldEdges(Covered.ToList(), CoverageColor);
             }
 
-            drawer?.CellBoolDrawerUpdate();
+            Drawer?.CellBoolDrawerUpdate();
         }
 
-        public void CacheCovered()
+        public virtual void CacheCovered()
         {
-            centers.Clear();
+            Centers.Clear();
 
-            centers.AddRange(Find.CurrentMap.listerThings.ThingsOfDef(CoverageDef).Select(t => t.Position));
+            Centers.AddRange(Find.CurrentMap.listerThings.ThingsOfDef(CoverageDef).Select(t => t.Position));
 
-            centers.AddRange(Find.CurrentMap.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint)
-                .Where(bp => GenConstruct.BuiltDefOf(bp.def) == CoverageDef).Select(t => t.Position).ToList());
+            Centers.AddRange(Find.CurrentMap.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint)
+                .Where(bp => GenConstruct.BuiltDefOf(bp.def) == CoverageDef).Select(t => t.Position));
 
-            centers.AddRange(Find.CurrentMap.listerThings.ThingsInGroup(ThingRequestGroup.BuildingFrame)
-                .Where(frame => GenConstruct.BuiltDefOf(frame.def) == CoverageDef).Select(t => t.Position).ToList());
+            Centers.AddRange(Find.CurrentMap.listerThings.ThingsInGroup(ThingRequestGroup.BuildingFrame)
+                .Where(frame => GenConstruct.BuiltDefOf(frame.def) == CoverageDef).Select(t => t.Position));
 
-            covered.Clear();
+            FromCenters();
+        }
 
-            covered.AddRange(centers.SelectMany(center => GenRadial.RadialCellsAround(center, CoverageRange, true)));
+        protected void FromCenters(float? r = null)
+        {
+            var range = r ?? CoverageRange;
 
-            coveredIndices.AddRange(covered.Select(Find.CurrentMap.cellIndices.CellToIndex));
+            Covered.Clear();
 
-            drawer.SetDirty();
+            Covered.AddRange(Centers.SelectMany(center => GenRadial.RadialCellsAround(center, range, true)).Where(c => c.InBounds(Find.CurrentMap) && !c.Fogged(Find.CurrentMap)));
+
+            CoveredIndices.Clear();
+
+            CoveredIndices.AddRange(Covered.Select(Find.CurrentMap.cellIndices.CellToIndex));
+
+            Drawer.SetDirty();
+        }
+    }
+
+    public class OverlayWorker_Chairs : OverlayWorker_Coverage
+    {
+        private readonly Func<ThingDef, bool> validator = td => td is {surfaceType: SurfaceType.Eat} or {building: {isSittable: true}};
+
+        private readonly Func<Thing, bool> validator2 = t =>
+            t.def.surfaceType == SurfaceType.Eat
+                ? GenAdj.CellsAdjacentCardinal(t).Any(c => Find.CurrentMap.thingGrid.ThingsListAt(c).Any(t => t is {def: {building: {isSittable: true}}}))
+                : GenAdj.CellsAdjacentCardinal(t).Any(c => c.HasEatSurface(Find.CurrentMap));
+
+        public OverlayWorker_Chairs()
+        {
+            CoverageColor = Color.blue;
+            CoverageRange = 32f;
+            CoverageDef = ThingDefOf.DiningChair;
+        }
+
+        public override bool ShouldAutoShow()
+        {
+            if (base.ShouldAutoShow()) return true;
+            if (Find.DesignatorManager.SelectedDesignator is Designator_Place {PlacingDef: ThingDef td} && validator(td)) return true;
+            return Find.Selector.SelectedObjects.OfType<Thing>().Any(t => validator(GenConstruct.BuiltDefOf(t.def) as ThingDef) && validator2(t));
+        }
+
+        public override void Notify_BuildingChanged(Thing t)
+        {
+            if (validator(t.def) && (!t.Spawned || validator2(t)))
+                base.Notify_BuildingChanged(t);
+        }
+
+        public override void CacheCovered()
+        {
+            Centers.Clear();
+
+            Centers.AddRange(Find.CurrentMap.listerBuildings.allBuildingsColonist.Where(t => validator(t.def) && validator2(t)).Select(t => t.Position));
+
+            Centers.AddRange(Find.CurrentMap.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint)
+                .Where(bp => GenConstruct.BuiltDefOf(bp.def) is ThingDef td && validator(td) && validator2(bp)).Select(t => t.Position));
+
+            Centers.AddRange(Find.CurrentMap.listerThings.ThingsInGroup(ThingRequestGroup.BuildingFrame)
+                .Where(frame => GenConstruct.BuiltDefOf(frame.def) is ThingDef td && validator(td) && validator2(frame)).Select(t => t.Position));
+
+            FromCenters();
+        }
+    }
+
+    public class OverlayWorker_Terror : OverlayWorker_Coverage
+    {
+        public OverlayWorker_Terror()
+        {
+            CoverageColor = Color.red;
+            CoverageRange = 5f;
+            CoverageDef = ThingDefOf.Skullspike;
+        }
+
+        public override bool DrawToggle => ModsConfig.IdeologyActive && base.DrawToggle;
+
+        public override void DoSettings(Listing_Standard listing)
+        {
+            if (ModsConfig.IdeologyActive) base.DoSettings(listing);
+            else listing.Label("ModDependsOn".Translate("Ideology"));
+        }
+
+        public override void Notify_BuildingChanged(Thing t)
+        {
+            if (ThingRelevant(t)) base.Notify_BuildingChanged(t);
+        }
+
+        private static bool ThingRelevant(Thing t) => (ThingRequestGroup.Corpse.Includes(t.def) || ThingRequestGroup.BuildingArtificial.Includes(t.def)) &&
+                                                      t.GetStatValue(StatDefOf.TerrorSource) > 0;
+
+        public override bool ShouldAutoShow()
+        {
+            if (Find.Selector.SelectedObjects.OfType<Thing>().Any(ThingRelevant)) return true;
+            if (Find.DesignatorManager.SelectedDesignator is Designator_Place {PlacingDef: {statBases: { } stats}} &&
+                stats.Any(s => s.stat == StatDefOf.TerrorSource)) return true;
+            return false;
+        }
+
+        public override void CacheCovered()
+        {
+            Centers.Clear();
+            Centers.AddRange(Find.CurrentMap.listerThings.ThingsInGroup(ThingRequestGroup.Corpse).Where(t => t.GetStatValue(StatDefOf.TerrorSource) > 0).Select(t => t.Position));
+            Centers.AddRange(Find.CurrentMap.listerThings.ThingsInGroup(ThingRequestGroup.BuildingArtificial).Where(t => t.GetStatValue(StatDefOf.TerrorSource) > 0)
+                .Select(t => t.Position));
+            FromCenters();
         }
     }
 }

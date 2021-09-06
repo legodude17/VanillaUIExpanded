@@ -144,6 +144,7 @@ namespace VUIE
         public override void DoSettings(Listing_Standard listing)
         {
             if (Active) base.DoSettings(listing);
+            else listing.Label("ModDependsOn".Translate(ModName));
         }
 
         protected virtual void ModInit(OverlayDef def)
@@ -383,6 +384,24 @@ namespace VUIE
         }
 
         public override string ValueToString(float value) => value.ToStringPercent();
+    }
+
+    public class OverlayWorker_TableSearch : OverlayWorker_Auto
+    {
+        public override bool CanShowNumbers => false;
+
+        public override bool ShouldAutoShow()
+        {
+            return Find.Selector.SelectedObjects.OfType<Thing>().Any(t => ThingRequestGroup.FoodSource.Includes(t.def));
+        }
+
+        public override void OverlayUpdate()
+        {
+            base.OverlayUpdate();
+            if (Visible)
+                foreach (var source in Find.Selector.SelectedObjects.OfType<Thing>().Where(t => ThingRequestGroup.FoodSource.Includes(t.def)))
+                    GenDraw.DrawFieldEdges(GenRadial.RadialCellsAround(source.Position, source.def.ingestible?.chairSearchRadius ?? 32f, true).ToList(), Color.blue);
+        }
     }
 
     public class OverlayWorker_WindBlocker : OverlayWorker_Auto

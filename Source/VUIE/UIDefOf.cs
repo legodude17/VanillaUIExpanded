@@ -27,6 +27,8 @@ namespace VUIE
         public static OverlayDef PlantGrowth;
         public static OverlayDef Smoothable;
         public static OverlayDef WindBlockers;
+        public static OverlayDef Wealth;
+        public static OverlayDef Health;
 
         static OverlayDefOf()
         {

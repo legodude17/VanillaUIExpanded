@@ -163,4 +163,34 @@
         <iconPath>DBH/UI/waste_water</iconPath>
         <workerClass>VUIE.OverlayWorker_WaterGrid</workerClass>
     </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Chairs</defName>
+        <label>toggle chair and table coverage overlay</label>
+        <description>Shows where colonists can find food with default search radius and still be able to eat at a table.</description>
+        <workerClass>VUIE.OverlayWorker_Chairs</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>TableSearch</defName>
+        <label>toggle table search overlay</label>
+        <description>Shows where pawns will search for a table from the selected food source.</description>
+        <workerClass>VUIE.OverlayWorker_TableSearch</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Wealth</defName>
+        <label>toggle wealth overlay</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>Health</defName>
+        <label>toggle health overlay</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>terror</defName>
+        <label>toggle terror overlay</label>
+        <description>.</description>
+        <workerClass>VUIE.OverlayWorker_Terror</workerClass>
+    </VUIE.OverlayDef>
 </Defs>

@@ -33,6 +33,11 @@ namespace VUIE
         {
             base.ExposeData();
             Scribe_Collections.Look(ref PipeTypesActive, "pipeTypes", LookMode.Value, LookMode.Value);
+            foreach (var name in patched.Select(type => type.FullName).Except(PipeTypesActive.Keys))
+            {
+                Log.Message($"Adding {name} to list");
+                PipeTypesActive.Add(name, new Dictionary<int, bool>());
+            }
         }
 
         protected override void ModInit(OverlayDef def)
@@ -42,7 +47,11 @@ namespace VUIE
             if (patched.Contains(sectionLayerTypeCached)) return;
             patched.Add(sectionLayerTypeCached);
             if (!PipeTypesActive.ContainsKey(sectionLayerTypeCached.FullName))
+            {
+                Log.Message($"Adding {sectionLayerTypeCached.FullName} to list");
                 PipeTypesActive.Add(sectionLayerTypeCached.FullName, new Dictionary<int, bool>());
+            }
+
             try
             {
                 tempType = sectionLayerTypeCached;
@@ -54,7 +63,12 @@ namespace VUIE
             }
         }
 
-        public static bool ShouldShow(Type layerType, int pipeType) => PipeTypesActive[layerType.FullName].TryGetValue(pipeType, out var result) && result;
+        public static bool ShouldShow(Type layerType, int pipeType)
+        {
+            Log.Message($"Getting with layerType={layerType},layerType.FullName={layerType.FullName},pipeType={pipeType}");
+            GenDebug.LogList(PipeTypesActive.Keys);
+            return PipeTypesActive[layerType.FullName].TryGetValue(pipeType, out var result) && result;
+        }
 
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
