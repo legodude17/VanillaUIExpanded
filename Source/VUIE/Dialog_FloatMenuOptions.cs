@@ -7,8 +7,8 @@ namespace VUIE
 {
     public class Dialog_FloatMenuOptions : Window
     {
-        private readonly List<FloatMenuOption> options;
-        private readonly List<ThingDef> shownItems;
+        private readonly HashSet<FloatMenuOption> dontShowItem = new();
+        protected readonly List<FloatMenuOption> options;
         private readonly FloatMenuModule.CallInfo source;
         private Vector2 scrollPosition = new(0, 0);
         private string searchText = "";
@@ -19,7 +19,6 @@ namespace VUIE
             doCloseX = true;
             doCloseButton = false;
             closeOnClickedOutside = true;
-            shownItems = new List<ThingDef>();
             foreach (var option in opts)
             {
                 var shown = option.shownItem;
@@ -31,10 +30,8 @@ namespace VUIE
                         Widgets.InfoCardButton(rect.x + 7f, rect.y / 2 - Widgets.InfoCardButtonSize / 2, shown);
                         return false;
                     };
-                    shownItems.Add(null);
+                    dontShowItem.Add(option);
                 }
-                else
-                    shownItems.Add(shown);
             }
         }
 
@@ -62,10 +59,10 @@ namespace VUIE
                     var opt = shownOptions[i];
                     var height = opt.RequiredHeight + 10f;
                     var rect2 = new Rect(0f, y, viewRect.width - 7f, height);
-                    if (shownItems[i] != null)
+                    if (opt.shownItem is not null && !dontShowItem.Contains(opt))
                     {
                         rect2.xMax -= Widgets.InfoCardButtonSize + 7f;
-                        Widgets.InfoCardButton(rect2.xMax + 7f, rect2.y / 2 - Widgets.InfoCardButtonSize / 2, shownItems[i]);
+                        Widgets.InfoCardButton(rect2.xMax + 7f, rect2.y / 2 - Widgets.InfoCardButtonSize / 2, opt.shownItem);
                     }
 
                     if (opt.DoGUI(rect2, false, null))

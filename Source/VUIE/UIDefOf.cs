@@ -9,6 +9,9 @@ namespace VUIE
         public static PlaySettingDef UI_EditMode;
         public static MainButtonDef VUIE_Overlays;
         public static KeyBindingDef VUIE_CycleOverlay;
+        public static JobDef VUIE_ManagedEquip;
+        public static JobDef VUIE_ManagedWear;
+        public static JobDef VUIE_ManagedPickUp;
 
         static UIDefOf()
         {

@@ -14,7 +14,7 @@ namespace VUIE
         private Vector2 scrollPos;
         public bool ShowSwitchButtons = true;
         public bool UseGrid = true;
-        public override string Label => "VUIE.FloatMenus".Translate();
+        public override string LabelKey => "VUIE.FloatMenus";
 
 
         public static FloatMenuModule Instance => UIMod.GetModule<FloatMenuModule>();

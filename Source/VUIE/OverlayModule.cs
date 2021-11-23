@@ -17,7 +17,7 @@ namespace VUIE
         private readonly Dictionary<OverlayDef, string> labelCache = new();
         public bool MoveOverlays;
         private Vector2 settingsScrollPos = Vector2.zero;
-        public override string Label => "VUIE.Overlays".Translate();
+        public override string LabelKey => "VUIE.Overlays";
 
         public override void DoSettingsWindowContents(Rect inRect)
         {

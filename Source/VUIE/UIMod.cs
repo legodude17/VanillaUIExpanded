@@ -20,7 +20,7 @@ namespace VUIE
         {
             Harm = new Harmony("vanillaexpanded.ui");
             modules = typeof(Module).AllSubclassesNonAbstract().Select(type => (Module) Activator.CreateInstance(type)).ToList();
-            curModule = modules.First(mod => !mod.Label.NullOrEmpty());
+            curModule = modules.First(mod => !mod.LabelKey.NullOrEmpty());
             LongEventHandler.ExecuteWhenFinished(() => Settings = GetSettings<UISettings>());
             foreach (var module in modules) module.DoPatches(Harm);
         }
@@ -34,10 +34,10 @@ namespace VUIE
         public override void DoSettingsWindowContents(Rect inRect)
         {
             base.DoSettingsWindowContents(inRect);
-            tabs ??= modules.Where(mod => !mod.Label.NullOrEmpty()).Select(mod => new TabRecord(mod.Label, () => curModule = mod, curModule == mod)).ToList();
+            tabs ??= modules.Where(mod => !mod.LabelKey.NullOrEmpty()).Select(mod => new TabRecord(mod.LabelKey.Translate(), () => curModule = mod, curModule == mod)).ToList();
             inRect.yMin += 25f;
             TabDrawer.DrawTabs(inRect, tabs);
-            if (!curModule.Label.NullOrEmpty()) curModule.DoSettingsWindowContents(inRect);
+            if (!curModule.LabelKey.NullOrEmpty()) curModule.DoSettingsWindowContents(inRect);
         }
     }
 
@@ -52,7 +52,7 @@ namespace VUIE
 
     public abstract class Module
     {
-        public virtual string Label => "";
+        public virtual string LabelKey => "";
 
         public virtual void SaveSettings()
         {

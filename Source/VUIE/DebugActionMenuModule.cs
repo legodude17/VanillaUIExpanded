@@ -18,7 +18,7 @@ namespace VUIE
         public static bool HideNotMatch;
 
         private static Dialog_DebugActionsMenu curInstance;
-        public override string Label => "VUIE.Debug.ActionMenu".Translate();
+        public override string LabelKey => "VUIE.Debug.ActionMenu";
 
 
         public override void DoPatches(Harmony harm)

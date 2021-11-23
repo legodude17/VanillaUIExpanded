@@ -18,6 +18,7 @@
     <VUIE.SetActive>Set Active</VUIE.SetActive>
     <VUIE.Remove>Remove</VUIE.Remove>
     <VUIE.Architect.AddConfig>Add Configuration</VUIE.Architect.AddConfig>
+    <VUIE.Architect.EditIcon>Edit Icon</VUIE.Architect.EditIcon>
     <VUIE.FloatMenus>Float Menus</VUIE.FloatMenus>
     <VUIE.FloatMenus.ShowSwitch>Show switch buttons</VUIE.FloatMenus.ShowSwitch>
     <VUIE.FloatMenus.UseGrid>Use Grid view</VUIE.FloatMenus.UseGrid>

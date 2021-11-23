@@ -66,8 +66,9 @@ namespace VUIE
 
         public override void DoWindowContents(Rect inRect)
         {
-            var tabListRect = inRect.LeftPartPixels(120f);
-            inRect.xMin += 125f;
+            var architectWidth = 33f + ArchitectModule.ArchitectWidth;
+            var tabListRect = inRect.LeftPartPixels(architectWidth);
+            inRect.xMin += architectWidth + 5f;
             DoArchitectTabList(tabListRect);
             var gizmoRect = inRect.LeftPart(0.7f);
             inRect.xMin += gizmoRect.width;
@@ -246,7 +247,12 @@ namespace VUIE
                 var buttonRect = rect.LeftPartPixels(rect.width - rect.height);
                 if (!desDragDropManager.DraggingNow && tabDragDropManager.TryStartDrag(tab, buttonRect))
                     ArchitectCategoryTabs.Remove(tab);
-                else if (Widgets.ButtonTextSubtle(buttonRect, label, 0f, 8f, SoundDefOf.Mouseover_Category, new Vector2(-1f, -1f)))
+                else if (ArchitectModule.IconsActive && Mouse.IsOver(buttonRect) && Input.GetMouseButtonDown(1))
+                    Find.WindowStack.Add(new FloatMenu(new List<FloatMenuOption>
+                    {
+                        new("VUIE.Architect.EditIcon".Translate(), () => Find.WindowStack.Add(new Dialog_ChooseIcon(path => ArchitectModule.SetIcon(tab.def.defName, path))))
+                    }));
+                else if (ArchitectModule.DoArchitectButton(buttonRect, label, 0f, 8f, SoundDefOf.Mouseover_Category, new Vector2(-1f, -1f)))
                     selectedCategoryTab = tab;
 
 

@@ -22,6 +22,17 @@ namespace VUIE
             return filter.Matches(command.Label);
         }
 
+        public static IEnumerable<IGrouping<int, TSource>> GroupsOf<TSource>(this IEnumerable<TSource> source, int numPerGroup)
+        {
+            var i = 0;
+            return source.GroupBy(_ => i++ % numPerGroup);
+        }
+
+        public static TKey GetKey<TKey, TValue>(this IDictionary<TKey, TValue> source, TValue value)
+        {
+            return source.FirstOrDefault(kv => Equals(kv.Value, value)).Key;
+        }
+
         public static string ToStringTicksToTime(this int ticks)
         {
             Vector2 vector;
@@ -61,5 +72,9 @@ namespace VUIE
             dest.Clear();
             foreach (var pair in source) dest.Add(pair.Key, pair.Value);
         }
+
+        public static MapComponent_EquipManager EquipManager(this Map map) => MapComponent_EquipManager.Get(map);
+
+        public static List<Equipment> EquipList(this Pawn pawn) => pawn.Map.EquipManager().Equipments.TryGetValue(pawn, out var equipList) ? equipList : null;
     }
 }

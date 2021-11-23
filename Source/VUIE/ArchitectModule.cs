@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -22,6 +24,11 @@ namespace VUIE
 
         public static Gizmo overrideMouseOverGizmo;
         public static bool DoDesInit = true;
+        private static readonly FastInvokeHandler architectIcons;
+        private static readonly AccessTools.FieldRef<object, Dictionary<string, Texture2D>> iconsCache;
+
+        private static Dictionary<string, string> iconChanges = new();
+        private static readonly Func<string, Texture2D> loadIcon;
         public int ActiveIndex = -1;
         private string buffer;
 
@@ -52,9 +59,35 @@ namespace VUIE
                 ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex]);
                 DoDesInit = false;
             });
+            var type = AccessTools.TypeByName("ArchitectIcons.ArchitectIconsMod");
+            MethodInfo method = null;
+            if (type is not null) method = AccessTools.Method(type, "DoArchitectButton");
+            if (method is not null) architectIcons = MethodInvoker.GetHandler(method);
+            type = AccessTools.TypeByName("ArchitectIcons.Resources");
+            if (type is not null) iconsCache = AccessTools.FieldRefAccess<Dictionary<string, Texture2D>>(type, "iconsCache");
+            if (type is not null) method = AccessTools.Method(type, "FindArchitectTabCategoryIcon");
+            if (method is not null) loadIcon = AccessTools.MethodDelegate<Func<string, Texture2D>>(method);
         }
 
-        public override string Label => "VUIE.Architect".Translate();
+        public static bool IconsActive => architectIcons is not null;
+
+        public static float ArchitectWidth => 100f + (architectIcons is not null ? 16f : 0f);
+        public override string LabelKey => "VUIE.Architect";
+
+        public static void SetIcon(string defName, string path)
+        {
+            iconChanges[defName] = path;
+            UIMod.Settings.Write();
+            iconsCache()[defName] = loadIcon(path);
+        }
+
+        public static bool DoArchitectButton(Rect rect, string label, float barPercent = 0f, float textLeftMargin = -1f, SoundDef mouseoverSound = null,
+            Vector2 functionalSizeOffset = default, Color? labelColor = null, bool highlight = false)
+        {
+            if (architectIcons is null)
+                return Widgets.ButtonTextSubtle(rect, label, barPercent, textLeftMargin, mouseoverSound, functionalSizeOffset, labelColor, highlight);
+            return (bool) architectIcons.Invoke(null, rect, label, barPercent, textLeftMargin, mouseoverSound, functionalSizeOffset, labelColor, highlight);
+        }
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
@@ -141,6 +174,26 @@ namespace VUIE
             Scribe_Collections.Look(ref SavedStates, "states", LookMode.Deep);
             Scribe_Values.Look(ref GroupDisplay, "displayType");
             Scribe_Values.Look(ref GroupOpenLeft, "openOnLeft");
+            Scribe_Collections.Look(ref iconChanges, "architectIconChanges", LookMode.Value, LookMode.Value);
+            iconChanges ??= new Dictionary<string, string>();
+            if (Scribe.mode == LoadSaveMode.LoadingVars && iconsCache is not null)
+                foreach (var iconChange in iconChanges)
+                    iconsCache()[iconChange.Key] = loadIcon(iconChange.Value);
+        }
+
+        public static Texture2D LoadIcon(string path) => loadIcon(path);
+
+        public static IEnumerable<string> AllPossibleIcons()
+        {
+            yield return "wrongsign";
+
+            var directoryInfo = new DirectoryInfo(Path.Combine(GenFilePaths.SaveDataFolderPath, "ArchitectIcons"));
+            if (!directoryInfo.Exists) directoryInfo.Create();
+            foreach (var file in directoryInfo.EnumerateFiles()) yield return file.Name;
+
+            foreach (var mod in LoadedModManager.RunningMods)
+            foreach (var tex in mod.textures.contentList.Keys.Where(key => key.StartsWith("UI/ArchitectIcons/")).Select(key => key.Replace("UI/ArchitectIcons/", "")))
+                yield return tex;
         }
 
         public override void DoPatches(Harmony harm)
