@@ -18,7 +18,7 @@ namespace VUIE
 
         public static bool Matches(this Command command, QuickSearchFilter filter)
         {
-            if (command is ICustomCommandMatch mathcer) return mathcer.Matches(filter);
+            if (command is ICustomCommandMatch matcher) return matcher.Matches(filter);
             return filter.Matches(command.Label);
         }
 
