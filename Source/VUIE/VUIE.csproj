@@ -85,15 +85,11 @@
     <Compile Include="Dialog_FloatMenuOptions.cs" />
     <Compile Include="Dialog_TextEntry.cs" />
     <Compile Include="DragDropManager.cs" />
-    <Compile Include="JobDriver_ManagedEquip.cs" />
-    <Compile Include="JobGiver_ManagedEquip.cs" />
     <Compile Include="MainButtonModule.cs" />
     <Compile Include="FloatMenuModule.cs" />
     <Compile Include="HistoryTabModule.cs" />
     <Compile Include="MainTabWindow_Chat.cs" />
-    <Compile Include="MainTabWindow_Equipment.cs" />
     <Compile Include="MainTabWindow_Overlays.cs" />
-    <Compile Include="MapComponent_EquipManager.cs" />
     <Compile Include="MapMeshFlagExt.cs" />
     <Compile Include="MessagesPageModule.cs" />
     <Compile Include="MiscModule.cs" />

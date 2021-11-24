@@ -72,9 +72,5 @@ namespace VUIE
             dest.Clear();
             foreach (var pair in source) dest.Add(pair.Key, pair.Value);
         }
-
-        public static MapComponent_EquipManager EquipManager(this Map map) => MapComponent_EquipManager.Get(map);
-
-        public static List<Equipment> EquipList(this Pawn pawn) => pawn.Map.EquipManager().Equipments.TryGetValue(pawn, out var equipList) ? equipList : null;
     }
 }
