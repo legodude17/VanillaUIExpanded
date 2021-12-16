@@ -27,6 +27,9 @@
     <VUIE.FloatMenus.Default>Default (Dialog when >30 options)</VUIE.FloatMenus.Default>
     <VUIE.Export>Export</VUIE.Export>
     <VUIE.Import>Import</VUIE.Import>
+    <VUIE.Misc>Misc</VUIE.Misc>
+    <VUIE.Misc.ShowImpact>Show impact on capacities</VUIE.Misc.ShowImpact>
+    <VUIE.Misc.ShowImpact.Desc>In the tooltip when hovering over a pawn's capacity (breathing, moving, etc.), also show how much each item contributes to the capacity.</VUIE.Misc.ShowImpact.Desc>
     <VUIE.Overlays>Overlays</VUIE.Overlays>
     <VUIE.Enabled>Enabled at all</VUIE.Enabled>
     <VUIE.Overlays.Move>Move Overlays to new tab</VUIE.Overlays.Move>

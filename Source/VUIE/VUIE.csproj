@@ -67,6 +67,10 @@
       <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VFECore">
+      <HintPath>..\..\..\VanillaExpandedFramework\1.3\Assemblies\VFECore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Architect\ArchitectExportImport.cs" />
@@ -76,6 +80,7 @@
     <Compile Include="Architect\ArchitectPresetDef.cs" />
     <Compile Include="Architect\BuildableGroupDef.cs" />
     <Compile Include="Architect\CommandGroup.cs" />
+    <Compile Include="Utils\DragDropManager.cs" />
     <Compile Include="Overlays\CoverageOverlays.cs" />
     <Compile Include="Modules\DebugActionMenuModule.cs" />
     <Compile Include="Architect\Designator_Group.cs" />
@@ -84,7 +89,6 @@
     <Compile Include="FloatMenus\Dialog_FloatMenuGrid.cs" />
     <Compile Include="FloatMenus\Dialog_FloatMenuOptions.cs" />
     <Compile Include="Architect\Dialog_TextEntry.cs" />
-    <Compile Include="Utils\DragDropManager.cs" />
     <Compile Include="Modules\MainButtonModule.cs" />
     <Compile Include="FloatMenus\FloatMenuModule.cs" />
     <Compile Include="Modules\HistoryTabModule.cs" />

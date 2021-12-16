@@ -4,6 +4,7 @@ using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using VFECore.UItils;
 
 namespace VUIE
 {
@@ -39,19 +40,23 @@ namespace VUIE
         {
             if (order is not null)
             {
-                var buttons = __instance.allButtonsInOrder.ListFullCopy();
+                var buttons = __instance.allButtonsInOrder.LogInline("Buttons:").ListFullCopy();
                 __instance.allButtonsInOrder.Clear();
-                foreach (var defName in order) __instance.allButtonsInOrder.Add(buttons.First(def => def.defName == defName));
+                foreach (var defName in order)
+                    if (buttons.FirstOrDefault(def => def.defName == defName) is { } buttonDef)
+                        __instance.allButtonsInOrder.Add(buttonDef);
                 foreach (var def in buttons.Except(__instance.allButtonsInOrder)) __instance.allButtonsInOrder.Add(def);
             }
 
             if (minimized is not null)
                 foreach (var kv in minimized)
-                    __instance.allButtonsInOrder.First(def => def.defName == kv.Key).minimized = kv.Value;
+                    if (__instance.allButtonsInOrder.FirstOrDefault(def => def.defName == kv.Key) is { } buttonDef)
+                        buttonDef.minimized = kv.Value;
 
             if (hidden is not null)
                 foreach (var kv in hidden)
-                    __instance.allButtonsInOrder.First(def => def.defName == kv.Key).buttonVisible = !kv.Value;
+                    if (__instance.allButtonsInOrder.FirstOrDefault(def => def.defName == kv.Key) is { } buttonDef)
+                        buttonDef.buttonVisible = !kv.Value;
         }
 
         public static bool DoButtons(MainButtonsRoot __instance)
