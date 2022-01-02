@@ -1,15 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
-using VFECore.UItils;
 
 namespace VUIE
 {
     public class Dialog_ConfigureArchitect : Window
     {
+        public static HashSet<Type> IgnoreDesignatorTypes = new()
+        {
+            typeof(Designator_Dropdown),
+            typeof(Designator_Group)
+        };
+
+        public static Dictionary<Type, Func<Type, IEnumerable<Designator>>> SpecialHandling = new();
+
         private readonly List<Designator> available = new();
         private readonly QuickSearchWidget availableSearch = new();
         private readonly DragDropManager<Designator> desDragDropManager = new((des, topLeft) => des.GizmoOnGUI(topLeft, Gizmo.Height, new GizmoRenderParms()));
@@ -30,17 +38,29 @@ namespace VUIE
         private Vector2 tabListScrollPos = Vector2.zero;
         private int tabMouseoverIdx = -1;
 
+        static Dialog_ConfigureArchitect()
+        {
+            SpecialHandling.Add(typeof(Designator_Build), _ => DefDatabase<ThingDef>.AllDefs
+                .Concat<BuildableDef>(DefDatabase<TerrainDef>.AllDefs)
+                .Where(d => d.canGenerateDefaultDesignator && d.designationCategory != null).Select(def => new Designator_Build(def)));
+            if (ModLister.HasActiveModWithName("More Planning 1.3"))
+                SpecialHandling.Add(AccessTools.TypeByName("MorePlanning.Designators.SelectColorDesignator"),
+                    type => Enumerable.Range(0, 10).Select(i => (Designator) Activator.CreateInstance(type, i)));
+            if (ModLister.HasActiveModWithName("Blueprints"))
+                SpecialHandling.Add(AccessTools.TypeByName("Blueprints.Designator_Blueprint"), type => Traverse.Create(Traverse
+                        .Create(AccessTools.TypeByName("Blueprints.BlueprintController")).Field("_instance").GetValue<object>()).Field("_blueprints").GetValue<List<object>>()
+                    .Select(obj => (Designator) Activator.CreateInstance(type, obj)));
+        }
+
         public Dialog_ConfigureArchitect()
         {
             doCloseButton = true;
             doCloseX = false;
             foreach (var type in typeof(Designator).AllSubclassesNonAbstract()
-                .Where(type => type != typeof(Designator_Dropdown) && type != typeof(Designator_Group) && !typeof(Designator_Install).IsAssignableFrom(type)))
-                if (type == typeof(Designator_Build))
-                    foreach (var def in DefDatabase<ThingDef>.AllDefs
-                        .Concat<BuildableDef>(DefDatabase<TerrainDef>.AllDefs)
-                        .Where(d => d.canGenerateDefaultDesignator && d.designationCategory != null))
-                        available.Add(new Designator_Build(def));
+                .Where(type => !typeof(Designator_Install).IsAssignableFrom(type) && !IgnoreDesignatorTypes.Contains(type) && (SpecialHandling.ContainsKey(type) ||
+                    type.GetConstructors().Any(m => m.GetParameters().Length == 0))))
+                if (SpecialHandling.ContainsKey(type))
+                    available.AddRange(SpecialHandling[type](type));
                 else
                     available.Add((Designator) Activator.CreateInstance(type));
         }

@@ -14,7 +14,6 @@ namespace VUIE
         public static Harmony Harm;
 
         private Module curModule;
-        private List<TabRecord> tabs;
 
         public UIMod(ModContentPack content) : base(content)
         {
@@ -34,9 +33,9 @@ namespace VUIE
         public override void DoSettingsWindowContents(Rect inRect)
         {
             base.DoSettingsWindowContents(inRect);
-            tabs ??= modules.Where(mod => !mod.LabelKey.NullOrEmpty()).Select(mod => new TabRecord(mod.LabelKey.Translate(), () => curModule = mod, curModule == mod)).ToList();
             inRect.yMin += 25f;
-            TabDrawer.DrawTabs(inRect, tabs);
+            TabDrawer.DrawTabs(inRect,
+                modules.Where(mod => !mod.LabelKey.NullOrEmpty()).Select(mod => new TabRecord(mod.LabelKey.Translate(), () => curModule = mod, curModule == mod)).ToList());
             if (!curModule.LabelKey.NullOrEmpty()) curModule.DoSettingsWindowContents(inRect);
         }
     }
