@@ -29,12 +29,14 @@
         <label>toggle power grid</label>
         <description>.</description>
         <workerClass>VUIE.OverlayWorker_Power</workerClass>
+        <iconPath>UI/PlaySettings/Button_PowerGrid</iconPath>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Gas</defName>
         <label>toggle gas grid</label>
         <description>.</description>
         <workerClass>VUIE.OverlayWorker_Gas</workerClass>
+        <iconPath>ArtAssets/GasPipe_MenuIcon</iconPath>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Sewage</defName>
@@ -61,30 +63,35 @@
         <defName>Lighting</defName>
         <label>toggle lighting overlay</label>
         <description>.</description>
+        <iconPath>UI/PlaySettings/Button_Lighting</iconPath>
         <workerClass>VUIE.OverlayWorker_Lighting</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>WalkSpeed</defName>
         <label>toggle path cost overlay</label>
         <description>.</description>
+        <iconPath>UI/PlaySettings/Button_WalkSpeed</iconPath>
         <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Usage</defName>
         <label>toggle usage overlay</label>
         <description>Shows how often your pawns are in each cell</description>
+        <iconPath>UI/PlaySettings/Button_Usage</iconPath>
         <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Cleanliness</defName>
         <label>toggle cleanliness overlay</label>
         <description>.</description>
+        <iconPath>UI/PlaySettings/Button_Cleanliness</iconPath>
         <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>PlantGrowth</defName>
         <label>toggle plant growth overlay</label>
         <description>.</description>
+        <iconPath>UI/PlaySettings/Button_PlantGrowth</iconPath>
         <workerClass>VUIE.OverlayWorker_Auto</workerClass>
         <autoshowOn>
             <li>Designator_PlantsCut</li>
@@ -96,6 +103,7 @@
         <defName>Smoothable</defName>
         <label>toggle smoothable overlay</label>
         <description>.</description>
+        <iconPath>UI/PlaySettings/Button_Smoothables</iconPath>
         <workerClass>VUIE.OverlayWorker_Auto</workerClass>
         <autoshowOn>
             <li>Designator_SmoothSurface</li>
@@ -105,6 +113,7 @@
         <defName>WindBlockers</defName>
         <label>toggle wind blocker overlay</label>
         <description>.</description>
+        <iconPath>UI/PlaySettings/Button_WindBlockers</iconPath>
         <workerClass>VUIE.OverlayWorker_WindBlocker</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
@@ -167,30 +176,35 @@
         <defName>Chairs</defName>
         <label>toggle chair and table coverage overlay</label>
         <description>Shows where colonists can find food with default search radius and still be able to eat at a table.</description>
+        <iconPath>UI/PlaySettings/Button_ChairAndTableCoverage</iconPath>
         <workerClass>VUIE.OverlayWorker_Chairs</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>TableSearch</defName>
         <label>toggle table search overlay</label>
         <description>Shows where pawns will search for a table from the selected food source.</description>
+        <iconPath>UI/PlaySettings/Button_TableSearch</iconPath>
         <workerClass>VUIE.OverlayWorker_TableSearch</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Wealth</defName>
         <label>toggle wealth overlay</label>
         <description>.</description>
+        <iconPath>UI/PlaySettings/Button_Wealth</iconPath>
         <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Health</defName>
         <label>toggle health overlay</label>
         <description>.</description>
+        <iconPath>UI/PlaySettings/Button_Health</iconPath>
         <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
-        <defName>terror</defName>
+        <defName>Terror</defName>
         <label>toggle terror overlay</label>
         <description>.</description>
+        <iconPath>UI/PlaySettings/Button_Terror</iconPath>
         <workerClass>VUIE.OverlayWorker_Terror</workerClass>
     </VUIE.OverlayDef>
 </Defs>

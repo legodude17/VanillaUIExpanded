@@ -3,6 +3,7 @@
     <VUIE.PlaySettingDef>
         <defName>UI_EditMode</defName>
         <label>Edit mode</label>
-        <description>.</description>
+        <description>Activate to drag and drop the buttons on the bottom to reorder them.</description>
+        <iconPath>UI/PlaySettings/Button_EditMode</iconPath>
     </VUIE.PlaySettingDef>
 </Defs>

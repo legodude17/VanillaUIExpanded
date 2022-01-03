@@ -80,6 +80,7 @@
     <Compile Include="Architect\ArchitectPresetDef.cs" />
     <Compile Include="Architect\BuildableGroupDef.cs" />
     <Compile Include="Architect\CommandGroup.cs" />
+    <Compile Include="Modules\ModCompatModule.cs" />
     <Compile Include="Utils\DragDropManager.cs" />
     <Compile Include="Overlays\CoverageOverlays.cs" />
     <Compile Include="Modules\DebugActionMenuModule.cs" />

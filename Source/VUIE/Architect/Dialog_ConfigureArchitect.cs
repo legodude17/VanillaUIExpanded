@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
@@ -16,7 +17,7 @@ namespace VUIE
             typeof(Designator_Group)
         };
 
-        public static Dictionary<Type, Func<Type, IEnumerable<Designator>>> SpecialHandling = new();
+        public static Dictionary<Type, DesignatorTypeHandling> SpecialHandling = new();
 
         private readonly List<Designator> available = new();
         private readonly QuickSearchWidget availableSearch = new();
@@ -40,16 +41,24 @@ namespace VUIE
 
         static Dialog_ConfigureArchitect()
         {
-            SpecialHandling.Add(typeof(Designator_Build), _ => DefDatabase<ThingDef>.AllDefs
-                .Concat<BuildableDef>(DefDatabase<TerrainDef>.AllDefs)
-                .Where(d => d.canGenerateDefaultDesignator && d.designationCategory != null).Select(def => new Designator_Build(def)));
+            SpecialHandling.Add(typeof(Designator_Build), DesignatorTypeHandling.Create(_ => DefDatabase<ThingDef>.AllDefs
+                    .Concat<BuildableDef>(DefDatabase<TerrainDef>.AllDefs)
+                    .Where(d => d.canGenerateDefaultDesignator && d.designationCategory != null).Select(def => new Designator_Build(def)),
+                des => (des as Designator_Build)?.PlacingDef.defName, (data, type) => new Designator_Build(
+                    (BuildableDef) DefDatabase<ThingDef>.GetNamedSilentFail(data) ?? DefDatabase<TerrainDef>.GetNamedSilentFail(data))));
             if (ModLister.HasActiveModWithName("More Planning 1.3"))
                 SpecialHandling.Add(AccessTools.TypeByName("MorePlanning.Designators.SelectColorDesignator"),
-                    type => Enumerable.Range(0, 10).Select(i => (Designator) Activator.CreateInstance(type, i)));
+                    DesignatorTypeHandling.Create(type => Enumerable.Range(0, 10).Select(i => (Designator) Activator.CreateInstance(type, i)),
+                        des => Traverse.Create(des).Field("Color").GetValue<int>().ToString(), (data, type) => (Designator) Activator.CreateInstance(type, int.Parse(
+                            data))));
             if (ModLister.HasActiveModWithName("Blueprints"))
-                SpecialHandling.Add(AccessTools.TypeByName("Blueprints.Designator_Blueprint"), type => Traverse.Create(Traverse
-                        .Create(AccessTools.TypeByName("Blueprints.BlueprintController")).Field("_instance").GetValue<object>()).Field("_blueprints").GetValue<List<object>>()
-                    .Select(obj => (Designator) Activator.CreateInstance(type, obj)));
+                SpecialHandling.Add(AccessTools.TypeByName("Blueprints.Designator_Blueprint"), DesignatorTypeHandling.Create(
+                    type =>
+                    {
+                        return Traverse.Create(AccessTools.TypeByName("Blueprints.BlueprintController")).Field("_instance").Field("_blueprints").GetValue<IList>()?.Cast<object>()
+                            .Select(obj => (Designator) Activator.CreateInstance(type, obj));
+                    }, des => Traverse.Create(des).Field("Blueprint").Field("name").GetValue<string>(), (data, type) => (Designator) Activator.CreateInstance(type,
+                        Traverse.Create(AccessTools.TypeByName("Blueprints.BlueprintController")).Method("FindBlueprint", data).GetValue(data))));
         }
 
         public Dialog_ConfigureArchitect()
@@ -60,9 +69,24 @@ namespace VUIE
                 .Where(type => !typeof(Designator_Install).IsAssignableFrom(type) && !IgnoreDesignatorTypes.Contains(type) && (SpecialHandling.ContainsKey(type) ||
                     type.GetConstructors().Any(m => m.GetParameters().Length == 0))))
                 if (SpecialHandling.ContainsKey(type))
-                    available.AddRange(SpecialHandling[type](type));
+                    available.AddRange(SpecialHandling[type].AllOptions(type) ?? Enumerable.Empty<Designator>());
                 else
-                    available.Add((Designator) Activator.CreateInstance(type));
+                    try
+                    {
+                        available.Add((Designator) Activator.CreateInstance(type));
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"[VUIE] Got error while attempting to create a Designator of type {type}: {e}");
+                    }
+
+            var not = typeof(Designator).AllSubclassesNonAbstract()
+                .Where(type => !SpecialHandling.ContainsKey(type) && type.GetConstructors().All(m => m.GetParameters().Length != 0)).ToList();
+            if (not.Any())
+            {
+                Log.Warning("[VUIE] Found unhandled Designator types:");
+                GenDebug.LogList(not);
+            }
         }
 
         public static Vector2 AdditionalSpacing => new(10f, 0);
@@ -209,17 +233,14 @@ namespace VUIE
             GizmoDrawer.DrawGizmosWithPages(available, ref curAvailablePage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) => true,
                 drawExtras: (giz, rect) =>
                 {
-                    if (giz is Designator des && desDragDropManager.TryStartDrag(des, rect))
-                    {
-                        if (giz is Designator_Build build)
-                            available[available.IndexOf(des)] = new Designator_Build(build.entDef);
-                        else available[available.IndexOf(des)] = (Designator) Activator.CreateInstance(des.GetType());
-                    }
+                    if (giz is Designator des && desDragDropManager.TryStartDrag(des, rect)) available[available.IndexOf(des)] = Clone(des);
                 }, useHotkeys: false, searchWidget: availableSearch, jump: !setPageWhileSearching);
             if (oldPage != curAvailablePage && availableSearch.filter.Active) setPageWhileSearching = true;
             if (desDragDropManager.DraggingNow) TooltipHandler.TipRegionByKey(inRect, "VUIE.Architect.DropDelete");
             desDragDropManager.DropLocation(inRect, _ => Widgets.DrawHighlight(inRect), _ => true);
         }
+
+        public static Designator Clone(Designator des) => DesignatorSaved.Load(DesignatorSaved.Save(des));
 
         private void DoUnassignedList(Rect inRect)
         {
@@ -307,6 +328,21 @@ namespace VUIE
                     catDef.ResolveDesignators();
                     ArchitectCategoryTabs.Add(new ArchitectCategoryTab(catDef, ((MainTabWindow_Architect) MainButtonDefOf.Architect.TabWindow).quickSearchWidget.filter));
                 });
+        }
+
+        public struct DesignatorTypeHandling
+        {
+            public Func<Type, IEnumerable<Designator>> AllOptions;
+            public Func<Designator, string> Save;
+            public Func<string, Type, Designator> Load;
+
+            public static DesignatorTypeHandling Create(Func<Type, IEnumerable<Designator>> options, Func<Designator, string> save, Func<string, Type, Designator> load) =>
+                new()
+                {
+                    AllOptions = options,
+                    Save = save,
+                    Load = load
+                };
         }
 
         public class Placeholder : Gizmo

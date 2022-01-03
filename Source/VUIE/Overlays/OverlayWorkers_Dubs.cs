@@ -9,7 +9,7 @@ namespace VUIE
 {
     public abstract class OverlayWorker_DubsPipes : OverlayWorker_Mod
     {
-        public static Dictionary<string, Dictionary<int, bool>> PipeTypesActive = new();
+        public static Dictionary<string, ActiveTypes> PipeTypesActive = new();
 
         private static Type tempType;
         private static readonly HashSet<Type> patched = new();
@@ -20,32 +20,35 @@ namespace VUIE
         public override bool Visible
         {
             get => sectionLayerTypeCached?.FullName is not null && PipeTypesActive is not null && PipeTypesActive.TryGetValue(sectionLayerTypeCached.FullName, out var types) &&
-                   types is not null &&
-                   types.TryGetValue(PipeType, out var result) && result;
+                   types.Active is not null &&
+                   types.Active.TryGetValue(PipeType, out var result) && result;
             set
             {
                 if (sectionLayerTypeCached?.FullName is null) return;
                 if (!PipeTypesActive.ContainsKey(sectionLayerTypeCached.FullName)) return;
                 var types = PipeTypesActive[sectionLayerTypeCached.FullName];
-                if (types is null) return;
-                types[PipeType] = value;
+                if (types.Active is null) return;
+                types.Active[PipeType] = value;
             }
         }
 
         public override void ExposeData()
         {
             base.ExposeData();
-            Scribe_Collections.Look(ref PipeTypesActive, "pipeTypes", LookMode.Value, LookMode.Value);
-            foreach (var name in patched.Select(type => type.FullName).Except(PipeTypesActive.Keys)) PipeTypesActive.Add(name, new Dictionary<int, bool>());
+            Scribe_Collections.Look(ref PipeTypesActive, "pipeTypes", LookMode.Value, LookMode.Deep);
+            foreach (var name in patched.Select(type => type.FullName).Except(PipeTypesActive.Keys))
+                PipeTypesActive.Add(name, new ActiveTypes {Active = new Dictionary<int, bool>()});
         }
 
         protected override void ModInit(OverlayDef def)
         {
             base.ModInit(def);
             sectionLayerTypeCached = SectionLayerType;
-            if (patched.Contains(sectionLayerTypeCached)) return;
+            if (patched.Contains(sectionLayerTypeCached) || sectionLayerTypeCached?.FullName is null) return;
             patched.Add(sectionLayerTypeCached);
-            if (!PipeTypesActive.ContainsKey(sectionLayerTypeCached.FullName)) PipeTypesActive.Add(sectionLayerTypeCached.FullName, new Dictionary<int, bool>());
+            if (!PipeTypesActive.ContainsKey(sectionLayerTypeCached.FullName))
+                PipeTypesActive.Add(sectionLayerTypeCached.FullName,
+                    new ActiveTypes {Active = new Dictionary<int, bool>()});
 
             try
             {
@@ -58,7 +61,8 @@ namespace VUIE
             }
         }
 
-        public static bool ShouldShow(Type layerType, int pipeType) => PipeTypesActive[layerType.FullName].TryGetValue(pipeType, out var result) && result;
+        public static bool ShouldShow(Type layerType, int pipeType) =>
+            layerType?.FullName is not null && PipeTypesActive[layerType.FullName].Active.TryGetValue(pipeType, out var result) && result;
 
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
@@ -82,6 +86,16 @@ namespace VUIE
             var idx2 = list.FindIndex(idx1, ins => ins.Branches(out _));
             list.InsertRange(idx2 + 1, list2.Select(ins => ins.Clone()));
             return list;
+        }
+
+        public struct ActiveTypes : IExposable
+        {
+            public Dictionary<int, bool> Active;
+
+            public void ExposeData()
+            {
+                Scribe_Collections.Look(ref Active, "active", LookMode.Value, LookMode.Value);
+            }
         }
     }
 

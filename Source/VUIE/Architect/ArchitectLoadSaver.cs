@@ -80,7 +80,7 @@ namespace VUIE
     public struct DesignatorSaved : IExposable
     {
         public string Type;
-        public string EntDefName;
+        public string AdditionalData;
         public string Name;
         public List<DesignatorSaved> Elements;
         public float Order;
@@ -89,7 +89,7 @@ namespace VUIE
         {
             Scribe_Values.Look(ref Type, "type");
             Scribe_Values.Look(ref Name, "name");
-            Scribe_Values.Look(ref EntDefName, "entDef");
+            Scribe_Values.Look(ref AdditionalData, "data");
             Scribe_Values.Look(ref Order, "order");
             Scribe_Collections.Look(ref Elements, "elements", LookMode.Deep);
         }
@@ -97,25 +97,25 @@ namespace VUIE
         public static Designator Load(DesignatorSaved saved)
         {
             Designator des;
-            switch (saved.Type)
-            {
-                case "VUIE.Designator_Group":
-                    des = new Designator_Group(saved.Elements.Select(Load).ToList(), saved.Name);
-                    break;
-                case "RimWorld.Designator_Dropdown":
-                    var dropdown = new Designator_Dropdown();
-                    foreach (var designator in saved.Elements.Select(Load)) dropdown.Add(designator);
-                    des = dropdown;
-                    break;
-                case "RimWorld.Designator_Build":
-                    var entDef = (BuildableDef) DefDatabase<ThingDef>.GetNamedSilentFail(saved.EntDefName) ?? DefDatabase<TerrainDef>.GetNamedSilentFail(saved.EntDefName);
-                    des = new Designator_Build(entDef);
-                    break;
-                default:
-                    des = (Designator) Activator.CreateInstance(AccessTools.TypeByName(saved.Type));
-                    des.isOrder = true;
-                    break;
-            }
+            var type = AccessTools.TypeByName(saved.Type);
+            if (Dialog_ConfigureArchitect.SpecialHandling.ContainsKey(type))
+                des = Dialog_ConfigureArchitect.SpecialHandling[type].Load(saved.AdditionalData, type);
+            else
+                switch (saved.Type)
+                {
+                    case "VUIE.Designator_Group":
+                        des = new Designator_Group(saved.Elements.Select(Load).ToList(), saved.Name);
+                        break;
+                    case "RimWorld.Designator_Dropdown":
+                        var dropdown = new Designator_Dropdown();
+                        foreach (var designator in saved.Elements.Select(Load)) dropdown.Add(designator);
+                        des = dropdown;
+                        break;
+                    default:
+                        des = (Designator) Activator.CreateInstance(AccessTools.TypeByName(saved.Type));
+                        des.isOrder = true;
+                        break;
+                }
 
             des.order = saved.Order;
 
@@ -130,19 +130,19 @@ namespace VUIE
                 Order = des.order
             };
 
-            switch (des)
-            {
-                case Designator_Build build:
-                    saved.EntDefName = build.entDef.defName;
-                    break;
-                case Designator_Dropdown dropdown:
-                    saved.Elements = dropdown.Elements.Select(Save).ToList();
-                    break;
-                case Designator_Group group:
-                    saved.Elements = group.Elements.Select(Save).ToList();
-                    saved.Name = group.label;
-                    break;
-            }
+            if (Dialog_ConfigureArchitect.SpecialHandling.ContainsKey(des.GetType()))
+                saved.AdditionalData = Dialog_ConfigureArchitect.SpecialHandling[des.GetType()].Save(des);
+            else
+                switch (des)
+                {
+                    case Designator_Dropdown dropdown:
+                        saved.Elements = dropdown.Elements.Select(Save).ToList();
+                        break;
+                    case Designator_Group group:
+                        saved.Elements = group.Elements.Select(Save).ToList();
+                        saved.Name = group.label;
+                        break;
+                }
 
             return saved;
         }

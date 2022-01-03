@@ -8,6 +8,7 @@
     <workerClass>VUIE.MainButtonWorker_Chat</workerClass>
     <order>75</order>
     <closesWorldView>true</closesWorldView>
+    <iconPath>UI/MainButtons/IconChat</iconPath>
   </MainButtonDef>
   <MainButtonDef>
     <defName>VUIE_Overlays</defName>
@@ -16,5 +17,6 @@
     <tabWindowClass>VUIE.MainTabWindow_Overlays</tabWindowClass>
     <order>77</order>
     <closesWorldView>true</closesWorldView>
+    <iconPath>UI/MainButtons/IconOverlays</iconPath>
   </MainButtonDef>
 </Defs>
