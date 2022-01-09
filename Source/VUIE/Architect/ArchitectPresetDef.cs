@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using RimWorld;
@@ -13,6 +14,8 @@ namespace VUIE
         public List<BuildableGroupDef> Groups;
 
         public List<DesignationCategoryDef> RemoveCats;
+
+        public ArchitectPresetDef() => description = "An architect preset";
 
         public override void PostLoad()
         {
@@ -32,13 +35,16 @@ namespace VUIE
                     {
                         var def = new DesignationCategoryDef
                         {
-                            defName = cat.DefName,
-                            label = cat.Label
+                            defName = cat.defName,
+                            label = cat.label,
+                            description = cat.description
                         };
                         ArchitectModule.DoDesInit = true;
                         def.ResolveDesignators();
+                        ArchitectModule.DoDesInit = false;
                         def.AllResolvedDesignators.Clear();
                         def.AllResolvedDesignators.AddRange(cat.Designators.Select(DesignatorSaved.Load));
+                        DefGenerator.AddImpliedDef(def);
                         var desTab = new ArchitectCategoryTab(def, ArchitectLoadSaver.Architect.quickSearchWidget.filter);
                         Dialog_ConfigureArchitect.ArchitectCategoryTabs.Add(desTab);
                     }
@@ -54,23 +60,67 @@ namespace VUIE
     public class DesignationCategoryChange
     {
         public DesignationCategoryDef Category;
-        public ThingDef ThingDef;
+        public BuildableDef Def;
 
         public void Apply()
         {
-            ThingDef.designationCategory = Category;
+            if (Def is null || Category is null) return;
+            Def.designationCategory = Category;
         }
 
         public void LoadDataFromXmlCustom(XmlNode xmlRoot)
         {
             if (xmlRoot.ChildNodes.Count != 1)
             {
-                Log.Error("Misconfigured DesignationCategoryChange: " + xmlRoot.OuterXml);
+                Log.Error("[VUIE] Misconfigured DesignationCategoryChange: " + xmlRoot.OuterXml);
                 return;
             }
 
-            DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "ThingDef", xmlRoot.Name);
-            DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "Category", xmlRoot.FirstChild.Value);
+            DirectXmlCrossRefLoader.wantedRefs.Add(new WantedRefForDesChange(this, WantedRefForDesChange.ChangeField.Def, xmlRoot.Name));
+            DirectXmlCrossRefLoader.wantedRefs.Add(new WantedRefForDesChange(this, WantedRefForDesChange.ChangeField.Category, xmlRoot.FirstChild.Value));
+        }
+    }
+
+    public class WantedRefForDesChange : DirectXmlCrossRefLoader.WantedRef
+    {
+        public enum ChangeField
+        {
+            Def,
+            Category
+        }
+
+        private readonly ChangeField field;
+        private readonly string target;
+
+        private new readonly DesignationCategoryChange wanter;
+
+        public WantedRefForDesChange(DesignationCategoryChange wanter, ChangeField field, string targetDefName)
+        {
+            this.wanter = wanter;
+            base.wanter = wanter;
+            this.field = field;
+            target = targetDefName;
+        }
+
+        public override bool TryResolve(FailMode failReportMode)
+        {
+            if (wanter is null || target.NullOrEmpty())
+            {
+                if (failReportMode == FailMode.LogErrors) Log.Error("[VUIE] Invalid arguments to WantedRefForDesChange");
+                return false;
+            }
+
+            switch (field)
+            {
+                case ChangeField.Def:
+                    wanter.Def = DefDatabase<BuildableDef>.GetNamedSilentFail(target);
+                    return true;
+                case ChangeField.Category:
+                    wanter.Category = DefDatabase<DesignationCategoryDef>.GetNamedSilentFail(target);
+                    return true;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 }

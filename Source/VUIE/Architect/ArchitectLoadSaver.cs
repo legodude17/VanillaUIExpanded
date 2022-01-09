@@ -23,10 +23,10 @@ namespace VUIE
             Architect.desPanelsCached.Clear();
             foreach (var tab in saved.Tabs)
             {
-                var def = DefDatabase<DesignationCategoryDef>.GetNamedSilentFail(tab.DefName) ?? new DesignationCategoryDef
+                var def = DefDatabase<DesignationCategoryDef>.GetNamedSilentFail(tab.defName) ?? new DesignationCategoryDef
                 {
-                    defName = tab.DefName,
-                    label = tab.Label
+                    defName = tab.defName,
+                    label = tab.label
                 };
                 ArchitectModule.DoDesInit = true;
                 def.ResolveDesignators();
@@ -58,21 +58,27 @@ namespace VUIE
 
     public struct ArchitectTabSaved : IExposable
     {
-        public string Label;
-        public string DefName;
+        // ReSharper disable InconsistentNaming
+
+        public string label;
+        public string defName;
+        public string description;
+
+        // ReSharper enable InconsistentNaming
         public List<DesignatorSaved> Designators;
 
         public void ExposeData()
         {
-            Scribe_Values.Look(ref Label, "label");
-            Scribe_Values.Look(ref DefName, "defName");
+            Scribe_Values.Look(ref label, "label");
+            Scribe_Values.Look(ref defName, "defName");
             Scribe_Collections.Look(ref Designators, "designators", LookMode.Deep);
         }
 
         public static ArchitectTabSaved Save(ArchitectCategoryTab tab) => new()
         {
-            Label = tab.def.label,
-            DefName = tab.def.LabelCap,
+            label = tab.def.label,
+            defName = tab.def.LabelCap,
+            description = tab.def.description,
             Designators = tab.def.AllResolvedDesignators.Select(DesignatorSaved.Save).ToList()
         };
     }

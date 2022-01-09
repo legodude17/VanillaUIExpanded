@@ -41,5 +41,8 @@
     <VUIE.Debug.Favorites>Do favorite debug actions</VUIE.Debug.Favorites>
     <VUIE.Debug.ActionMenu>Debug Action Menu</VUIE.Debug.ActionMenu>
     <VUIE.Debug.HideNotMatch>Hide items that don't match search</VUIE.Debug.HideNotMatch>
+    <VUIE.ModCompat>Mod integrations</VUIE.ModCompat>
+    <VUIE.ModCompat.TD>TD Enhancement Pack Integration</VUIE.ModCompat.TD>
+    <VUIE.ModCompat.TD.Desc>Disable the overlays system in TD Enhancement Pack in favor of the ones in Vanilla UI Expanded. Requires restart to take effect.</VUIE.ModCompat.TD.Desc>
     <VUIE.Debug.HideNotMatch.Desc>By default, rimworld simply highlights search matches in debug action menus. With this setting on, they will instead be completely hidden. May increase performance when searching with lots of options.</VUIE.Debug.HideNotMatch.Desc>
 </LanguageData>

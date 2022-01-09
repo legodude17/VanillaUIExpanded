@@ -75,7 +75,6 @@
   <ItemGroup>
     <Compile Include="Architect\ArchitectExportImport.cs" />
     <Compile Include="Architect\ArchitectLoadSaver.cs" />
-    <Compile Include="Architect\ArchitectMainTabModule.cs" />
     <Compile Include="Architect\ArchitectModule.cs" />
     <Compile Include="Architect\ArchitectPresetDef.cs" />
     <Compile Include="Architect\BuildableGroupDef.cs" />

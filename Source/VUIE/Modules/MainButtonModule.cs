@@ -4,7 +4,6 @@ using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
-using VFECore.UItils;
 
 namespace VUIE
 {
@@ -40,7 +39,7 @@ namespace VUIE
         {
             if (order is not null)
             {
-                var buttons = __instance.allButtonsInOrder.LogInline("Buttons:").ListFullCopy();
+                var buttons = __instance.allButtonsInOrder.ListFullCopy();
                 __instance.allButtonsInOrder.Clear();
                 foreach (var defName in order)
                     if (buttons.FirstOrDefault(def => def.defName == defName) is { } buttonDef)
