@@ -170,7 +170,7 @@ namespace VUIE
         public SectionLayer_PlantGrowth(Section section) : base(section) => relevantChangeTypes = MapMeshFlag.Things;
 
         public override OverlayDef OverlayDef => OverlayDefOf.PlantGrowth;
-        public override float ValueForCell(IntVec3 c) => Map.thingGrid.ThingAt<Plant>(c).Growth;
+        public override float ValueForCell(IntVec3 c) => Map.thingGrid.ThingAt<Plant>(c)?.Growth ?? 0;
 
         public override Color ColorForCell(IntVec3 c) => Color.Lerp(Color.red, Color.green, ValueForCell(c));
 
@@ -225,7 +225,7 @@ namespace VUIE
             var num = 0f;
             if (ThingRequestGroup.HaulableEver.Includes(t.def)) num += t.MarketValue * t.stackCount;
             if (ThingRequestGroup.BuildingArtificial.Includes(t.def)) num += t.GetStatValue(StatDefOf.MarketValueIgnoreHp);
-            if (t is IThingHolder x and not (PassingShip or MapComponent or Pawn)) num += x.GetDirectlyHeldThings().Sum(ThingWealth);
+            if (t is IThingHolder x and not (PassingShip or MapComponent or Pawn)) num += x.GetDirectlyHeldThings()?.Sum(ThingWealth) ?? 0;
             return num;
         }
 

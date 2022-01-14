@@ -52,7 +52,7 @@ namespace VUIE
                 if (Changes != null)
                     foreach (var change in Changes)
                         change.Apply();
-                module.SavedStates.Add(ArchitectLoadSaver.SaveState(label));
+                module.AddState(ArchitectLoadSaver.SaveState(label));
             });
         }
     }

@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 
@@ -27,11 +30,15 @@ namespace VUIE
                     option.extraPartWidth = Widgets.InfoCardButtonSize + 7f;
                     option.extraPartOnGUI = rect =>
                     {
-                        Widgets.InfoCardButton(rect.x + 7f, rect.y / 2 - Widgets.InfoCardButtonSize / 2, shown);
+                        Widgets.InfoCardButton(rect.x + 7f, rect.y / 2 - Widgets.InfoCardButtonSize / 2 + 5f, shown);
                         return false;
                     };
                     dontShowItem.Add(option);
                 }
+                else if (option.extraPartOnGUI is not null && PatchProcessor.GetCurrentInstructions(option.extraPartOnGUI.Method).Any(ins =>
+                    ins.opcode == OpCodes.Call && ins.operand is MethodInfo {DeclaringType: var type, Name: var name} && type == typeof(Widgets) &&
+                    name == nameof(Widgets.InfoCardButton)))
+                    dontShowItem.Add(option);
             }
         }
 
@@ -49,14 +56,13 @@ namespace VUIE
             searchText = Widgets.TextField(outRect.TopPartPixels(35f), searchText);
             outRect.yMin += 40f;
             var shownOptions = options.Where(opt => opt.Label.ToLower().Contains(searchText.ToLower())).ToList();
-            var viewRect = new Rect(0f, 0f, outRect.width - 16f, shownOptions.Sum(opt => opt.RequiredHeight + 10f));
+            var viewRect = new Rect(0f, 0f, outRect.width - 16f, shownOptions.Sum(opt => opt.RequiredHeight + 17f));
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
             try
             {
                 var y = 0f;
-                for (var i = 0; i < shownOptions.Count; i++)
+                foreach (var opt in shownOptions)
                 {
-                    var opt = shownOptions[i];
                     var height = opt.RequiredHeight + 10f;
                     var rect2 = new Rect(0f, y, viewRect.width - 7f, height);
                     if (opt.shownItem is not null && !dontShowItem.Contains(opt))

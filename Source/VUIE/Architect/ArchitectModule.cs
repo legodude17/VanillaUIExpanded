@@ -29,6 +29,7 @@ namespace VUIE
 
         private static Dictionary<string, string> iconChanges = new();
         private static readonly Func<string, Texture2D> loadIcon;
+        private static readonly AccessTools.FieldRef<object, List<ArchitectCategoryTab>> mintDesPanelsCached;
         public int ActiveIndex = -1;
         private string buffer;
 
@@ -67,12 +68,18 @@ namespace VUIE
             if (type is not null) iconsCache = AccessTools.FieldRefAccess<Dictionary<string, Texture2D>>(type, "iconsCache");
             if (type is not null) method = AccessTools.Method(type, "FindArchitectTabCategoryIcon");
             if (method is not null) loadIcon = AccessTools.MethodDelegate<Func<string, Texture2D>>(method);
+            type = AccessTools.TypeByName("DubsMintMenus.MainTabWindow_MintArchitect");
+            if (type is not null) mintDesPanelsCached = AccessTools.FieldRefAccess<List<ArchitectCategoryTab>>(type, "desPanelsCached");
         }
+
+        public static bool MintCompat => mintDesPanelsCached is not null;
 
         public static bool IconsActive => architectIcons is not null;
 
         public static float ArchitectWidth => 100f + (architectIcons is not null ? 16f : 0f);
         public override string LabelKey => "VUIE.Architect";
+
+        public static void MintRefresh() => mintDesPanelsCached.Invoke(DefDatabase<MainButtonDef>.GetNamedSilentFail("MintMenus"));
 
         public static void SetIcon(string defName, string path)
         {
@@ -160,10 +167,17 @@ namespace VUIE
             listing.Gap(6f);
             var butRect = listing.GetRect(30f);
             if (Widgets.ButtonText(butRect.LeftHalf(), "VUIE.Architect.AddConfig".Translate()))
-                Dialog_TextEntry.GetString(str => SavedStates.Add(ArchitectLoadSaver.SaveState(str)));
+                Dialog_TextEntry.GetString(str => AddState(ArchitectLoadSaver.SaveState(str)));
             if (Widgets.ButtonText(butRect.RightHalf(), "VUIE.Import".Translate())) Find.WindowStack.Add(new Dialog_ArchitectList_Import(state => SavedStates.Add(state)));
 
             listing.End();
+        }
+
+        public void AddState(ArchitectSaved state)
+        {
+            var i = 1;
+            while (SavedStates.Any(s => s.Name == state.Name)) state.Name = $"Untitled {i}";
+            SavedStates.Add(state);
         }
 
         public override void SaveSettings()
@@ -251,7 +265,7 @@ namespace VUIE
                 if (index == -1)
                 {
                     index = me.SavedStates.Count;
-                    me.SavedStates.Add(ArchitectLoadSaver.SaveState(def.presetName));
+                    me.AddState(ArchitectLoadSaver.SaveState(def.presetName));
                 }
 
                 ArchitectLoadSaver.RestoreState(me.SavedStates[index]);

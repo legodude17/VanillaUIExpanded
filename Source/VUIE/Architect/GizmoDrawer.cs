@@ -16,8 +16,8 @@ namespace VUIE
             Action<Gizmo> onMouseOver = null, bool useHotkeys = true, Action<Gizmo, Rect> drawExtras = null, QuickSearchWidget searchWidget = null, bool jump = false)
         {
             var groups = SplitIntoGroups(gizmos.ToList(), gizmosRect, forceShrunk);
-            curPage = Mathf.Clamp(curPage, 0, groups.Count);
-            DoPageControls(ref curPage, groups.Count, controlsRect, searchWidget);
+            curPage = Mathf.Clamp(curPage, 0, groups.Count - 1);
+            DoPageControls(ref curPage, groups.Count, controlsRect, searchWidget, gizmosRect);
             if (searchWidget?.filter is {Active: true} && !groups[curPage].Any(gizmo => Matches(searchWidget.filter, gizmo)) && jump)
             {
                 var idx = groups.FindIndex(group => group.Any(gizmo => Matches(searchWidget.filter, gizmo)));
@@ -31,7 +31,7 @@ namespace VUIE
 
         private static bool Matches(QuickSearchFilter filter, Gizmo gizmo) => gizmo is Command c && filter is {Active: true} && filter.Matches(c.Label);
 
-        private static void DoPageControls(ref int curPage, int pages, Rect inRect, QuickSearchWidget searchWidget)
+        private static void DoPageControls(ref int curPage, int pages, Rect inRect, QuickSearchWidget searchWidget, Rect? checkForMouseOver = null)
         {
             var row = new WidgetRow(inRect.x, inRect.y, UIDirection.RightThenDown);
             if (row.ButtonText("<", fixedWidth: 50f, active: curPage > 0)) curPage--;
@@ -47,6 +47,12 @@ namespace VUIE
 
             row.Gap(12f);
             if (row.ButtonText(">", fixedWidth: 50f, active: curPage + 1 < pages)) curPage++;
+
+            if (Event.current.type == EventType.ScrollWheel && (Mouse.IsOver(inRect) || checkForMouseOver is not null && Mouse.IsOver(checkForMouseOver.Value)))
+            {
+                curPage = Mathf.Clamp(curPage + (int) Mathf.Sign(Event.current.delta.y), 0, pages - 1);
+                Event.current.Use();
+            }
         }
 
         private static List<List<Gizmo>> SplitIntoGroups(IReadOnlyCollection<Gizmo> gizmos, Rect inRect, bool shrunk = false)
@@ -306,13 +312,19 @@ namespace VUIE
             Func<Gizmo, Vector2, bool> onClicked = null)
         {
             if (result.State >= GizmoState.Mouseover) mouseoverGiz = giz;
-            if ((result.State == GizmoState.Interacted || result.State == GizmoState.OpenedFloatMenu) && onClicked != null && onClicked(giz, topLeft)) return;
-            if (result.State == GizmoState.Interacted || result.State == GizmoState.OpenedFloatMenu && giz.RightClickFloatMenuOptions.FirstOrDefault() == null)
+            switch (result.State)
             {
-                interactedEvent = result.InteractEvent;
-                interactedGiz = giz;
+                case GizmoState.Interacted or GizmoState.OpenedFloatMenu when onClicked != null && onClicked(giz, topLeft):
+                    return;
+                case GizmoState.Interacted:
+                case GizmoState.OpenedFloatMenu when giz.RightClickFloatMenuOptions.FirstOrDefault() == null:
+                    interactedEvent = result.InteractEvent;
+                    interactedGiz = giz;
+                    break;
+                case GizmoState.OpenedFloatMenu:
+                    floatMenuGiz = giz;
+                    break;
             }
-            else if (result.State == GizmoState.OpenedFloatMenu) floatMenuGiz = giz;
         }
 
         private static List<Gizmo> FindMatchingGroup(Gizmo toMatch)

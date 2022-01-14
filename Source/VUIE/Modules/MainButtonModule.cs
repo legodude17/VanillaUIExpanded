@@ -54,7 +54,9 @@ namespace VUIE
 
             if (hidden is not null)
                 foreach (var kv in hidden)
-                    if (__instance.allButtonsInOrder.FirstOrDefault(def => def.defName == kv.Key) is { } buttonDef)
+                    if (kv.Key == UIDefOf.VUIE_Overlays.defName)
+                        UIDefOf.VUIE_Overlays.buttonVisible = UIMod.GetModule<OverlayModule>().MoveOverlays;
+                    else if (__instance.allButtonsInOrder.FirstOrDefault(def => def.defName == kv.Key) is { } buttonDef)
                         buttonDef.buttonVisible = !kv.Value;
         }
 
@@ -85,11 +87,14 @@ namespace VUIE
                         }
 
                         if (Mouse.IsOver(rect) && Input.GetMouseButtonDown(1))
+                        {
                             Find.WindowStack.Add(new FloatMenu(new List<FloatMenuOption>
                             {
                                 new("VUIE.Minimize".Translate(), button.minimized ? null : () => button.minimized = true),
                                 new("VUIE.Maximizie".Translate(), button.minimized ? () => button.minimized = false : null)
                             }));
+                            Event.current.Use();
+                        }
 
                         button.Worker.DoButton(rect);
 

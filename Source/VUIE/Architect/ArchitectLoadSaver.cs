@@ -39,6 +39,8 @@ namespace VUIE
                 var desTab = new ArchitectCategoryTab(def, Architect.quickSearchWidget.filter);
                 Architect.desPanelsCached.Add(desTab);
             }
+
+            if (ArchitectModule.MintCompat) ArchitectModule.MintRefresh();
         }
     }
 

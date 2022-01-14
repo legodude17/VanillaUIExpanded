@@ -79,8 +79,7 @@ namespace VUIE
                 }
             });
 
-            if (ArchitectModule.IconsActive)
-                Log.Message("[VUIE] Architect icons detected, activating compatibility patch...");
+            if (ArchitectModule.IconsActive) Log.Message("[VUIE] Architect icons detected, activating compatibility patch...");
 
             if (ModLister.HasActiveModWithName("HugsLib"))
             {
@@ -88,6 +87,8 @@ namespace VUIE
                 harm.Patch(AccessTools.Method(AccessTools.TypeByName("HugsLib.Settings.Dialog_ModSettings"), "DoWindowContents"),
                     transpiler: new HarmonyMethod(GetType(), nameof(AddSearchBoxToModSettings)));
             }
+
+            if (ArchitectModule.MintCompat) Log.Message("[VUIE] Dubs Mint Menus detected, activating compatibility patch...");
         }
 
         public static Exception GroupsWithFinalizer(Exception __exception, ref bool __result)

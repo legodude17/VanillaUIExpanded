@@ -19,7 +19,7 @@ namespace VUIE
 
         public static Dictionary<Type, DesignatorTypeHandling> SpecialHandling = new();
 
-        private readonly List<Designator> available = new();
+        private static readonly List<Designator> available = new();
         private readonly QuickSearchWidget availableSearch = new();
         private readonly DragDropManager<Designator> desDragDropManager = new((des, topLeft) => des.GizmoOnGUI(topLeft, Gizmo.Height, new GizmoRenderParms()));
 
@@ -41,24 +41,31 @@ namespace VUIE
 
         static Dialog_ConfigureArchitect()
         {
-            SpecialHandling.Add(typeof(Designator_Build), DesignatorTypeHandling.Create(_ => DefDatabase<ThingDef>.AllDefs
+            SpecialHandling.Add(typeof(Designator_Build), DesignatorTypeHandling.Create(
+                _ => DefDatabase<ThingDef>.AllDefs
                     .Concat<BuildableDef>(DefDatabase<TerrainDef>.AllDefs)
-                    .Where(d => d.canGenerateDefaultDesignator && d.designationCategory != null).Select(def => new Designator_Build(def)),
-                des => (des as Designator_Build)?.PlacingDef.defName, (data, type) => new Designator_Build(
-                    (BuildableDef) DefDatabase<ThingDef>.GetNamedSilentFail(data) ?? DefDatabase<TerrainDef>.GetNamedSilentFail(data))));
+                    .Where(d => d.canGenerateDefaultDesignator && d.designationCategory != null)
+                    .Select(def => new Designator_Build(def)),
+                des => (des as Designator_Build)?.PlacingDef.defName,
+                (data, type) => new Designator_Build((BuildableDef) DefDatabase<ThingDef>.GetNamedSilentFail(data) ?? DefDatabase<TerrainDef>.GetNamedSilentFail(data))));
             if (ModLister.HasActiveModWithName("More Planning 1.3"))
                 SpecialHandling.Add(AccessTools.TypeByName("MorePlanning.Designators.SelectColorDesignator"),
-                    DesignatorTypeHandling.Create(type => Enumerable.Range(0, 10).Select(i => (Designator) Activator.CreateInstance(type, i)),
-                        des => Traverse.Create(des).Field("Color").GetValue<int>().ToString(), (data, type) => (Designator) Activator.CreateInstance(type, int.Parse(
-                            data))));
+                    DesignatorTypeHandling.Create(
+                        type => Enumerable.Range(0, 10).Select(i => (Designator) Activator.CreateInstance(type, i)),
+                        des => Traverse.Create(des).Field("Color").GetValue<int>().ToString(),
+                        (data, type) => (Designator) Activator.CreateInstance(type, int.Parse(data))));
             if (ModLister.HasActiveModWithName("Blueprints"))
                 SpecialHandling.Add(AccessTools.TypeByName("Blueprints.Designator_Blueprint"), DesignatorTypeHandling.Create(
-                    type =>
-                    {
-                        return Traverse.Create(AccessTools.TypeByName("Blueprints.BlueprintController")).Field("_instance").Field("_blueprints").GetValue<IList>()?.Cast<object>()
-                            .Select(obj => (Designator) Activator.CreateInstance(type, obj));
-                    }, des => Traverse.Create(des).Field("Blueprint").Field("name").GetValue<string>(), (data, type) => (Designator) Activator.CreateInstance(type,
-                        Traverse.Create(AccessTools.TypeByName("Blueprints.BlueprintController")).Method("FindBlueprint", data).GetValue(data))));
+                    type => Traverse
+                        .Create(AccessTools.TypeByName("Blueprints.BlueprintController"))
+                        .Field("_instance")
+                        .Field("_blueprints")
+                        .GetValue<IList>()?.Cast<object>()
+                        .Select(obj => (Designator) Activator.CreateInstance(type, obj)),
+                    des => Traverse.Create(des).Field("Blueprint").Field("name").GetValue<string>(),
+                    (data, type) => (Designator) Activator.CreateInstance(type, Traverse.Create(AccessTools.TypeByName("Blueprints.BlueprintController"))
+                        .Method("FindBlueprint", data)
+                        .GetValue(data))));
         }
 
         public Dialog_ConfigureArchitect()
@@ -103,7 +110,8 @@ namespace VUIE
             {
                 var state = ArchitectLoadSaver.SaveState("VUIE.Main".Translate());
                 module.ActiveIndex = module.SavedStates.Count;
-                module.SavedStates.Add(state);
+                module.AddState(state);
+                if (ArchitectModule.MintCompat) ArchitectModule.MintRefresh();
             }
             else
                 module.SavedStates[module.ActiveIndex] = ArchitectLoadSaver.SaveState(module.SavedStates[module.ActiveIndex].Name);
@@ -111,23 +119,23 @@ namespace VUIE
 
         public override void DoWindowContents(Rect inRect)
         {
-            var architectWidth = 33f + ArchitectModule.ArchitectWidth;
+            var architectWidth = 33f + ArchitectModule.ArchitectWidth + 25f;
             var tabListRect = inRect.LeftPartPixels(architectWidth);
-            inRect.xMin += architectWidth + 5f;
             DoArchitectTabList(tabListRect);
+            inRect.xMin += architectWidth + 5f;
             var gizmoRect = inRect.LeftPart(0.7f);
             inRect.xMin += gizmoRect.width;
             var selectedRect = gizmoRect.BottomHalf().ContractedBy(12f);
             gizmoRect = gizmoRect.TopHalf().ContractedBy(12f);
+            selectedRect.yMax -= 50f;
             Widgets.DrawMenuSection(gizmoRect);
             Widgets.DrawMenuSection(selectedRect);
 
             if (selectedCategoryTab != null)
             {
                 var flag = false;
-                gizmoRect = gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x);
+                gizmoRect = gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x * 3);
                 var gizmos = selectedCategoryTab.def.AllResolvedDesignators.Cast<Gizmo>().ToList();
-                gizmos.SortStable(GizmoGridDrawer.SortByOrder);
                 Placeholder placeholder = null;
                 if (desDragDropManager.DraggingNow && Mouse.IsOver(gizmoRect))
                 {
@@ -139,8 +147,8 @@ namespace VUIE
                     if (insertBefore is not null)
                     {
                         var idx = gizmos.IndexOf(insertBefore) + 1;
-                        gizmos.Insert(idx,
-                            placeholder = new Placeholder((insertBefore.order + (idx == gizmos.Count - 1 ? insertBefore.order + 2 : gizmos[idx + 1].order)) / 2,
+                        gizmos.Place(idx,
+                            placeholder = new Placeholder((insertBefore.order + (idx >= gizmos.Count - 1 ? insertBefore.order + 2 : gizmos[idx + 1].order)) / 2,
                                 desDragDropManager.Dragging.GetWidth(gizmoRect.width)));
                     }
                 }
@@ -166,7 +174,7 @@ namespace VUIE
                             else if (gizmo is Placeholder)
                             {
                                 des.order = gizmo.order;
-                                selectedCategoryTab.def.AllResolvedDesignators.Insert(gizmos.IndexOf(gizmo), des);
+                                selectedCategoryTab.def.AllResolvedDesignators.Place(gizmos.IndexOf(gizmo), des);
                             }
                             else
                                 Dialog_TextEntry.GetString(str =>
@@ -184,7 +192,7 @@ namespace VUIE
                         if (placeholder != null)
                         {
                             des.order = placeholder.order;
-                            selectedCategoryTab.def.AllResolvedDesignators.Insert(gizmos.IndexOf(placeholder), des);
+                            selectedCategoryTab.def.AllResolvedDesignators.Place(gizmos.IndexOf(placeholder), des);
                         }
                         else selectedCategoryTab.def.AllResolvedDesignators.Add(des);
 
@@ -230,7 +238,11 @@ namespace VUIE
             Widgets.DrawMenuSection(inRect);
             if (!availableSearch.filter.Active) setPageWhileSearching = false;
             var oldPage = curAvailablePage;
-            GizmoDrawer.DrawGizmosWithPages(available, ref curAvailablePage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) => true,
+            GizmoDrawer.DrawGizmosWithPages(available, ref curAvailablePage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) =>
+                {
+                    if (Event.current.shift) selectedCategoryTab.def.AllResolvedDesignators.Add(Clone((Designator) giz));
+                    return true;
+                },
                 drawExtras: (giz, rect) =>
                 {
                     if (giz is Designator des && desDragDropManager.TryStartDrag(des, rect)) available[available.IndexOf(des)] = Clone(des);
@@ -247,7 +259,16 @@ namespace VUIE
             var controlsRect = inRect.TopPartPixels(35f);
             inRect.yMin += 40f;
             Widgets.DrawMenuSection(inRect);
-            GizmoDrawer.DrawGizmosWithPages(unassigned, ref curUnassignedPage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) => true,
+            GizmoDrawer.DrawGizmosWithPages(unassigned, ref curUnassignedPage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) =>
+                {
+                    if (Event.current.shift)
+                    {
+                        unassigned.Remove(giz as Designator);
+                        selectedCategoryTab.def.AllResolvedDesignators.Add((Designator) giz);
+                    }
+
+                    return true;
+                },
                 drawExtras: (giz, rect) =>
                 {
                     if (desDragDropManager.TryStartDrag(giz as Designator, rect)) unassigned.Remove(giz as Designator);
@@ -261,9 +282,9 @@ namespace VUIE
 
         private void DoArchitectTabList(Rect inRect)
         {
-            var viewRect = new Rect(0, 0, inRect.width, ArchitectCategoryTabs.Count * 33f);
+            var viewRect = new Rect(0, 0, inRect.width - 25f, ArchitectCategoryTabs.Count * 33f);
             var addRect = inRect.BottomPartPixels(30f);
-            inRect.yMax += 50f;
+            inRect.yMax -= 50f;
             Widgets.DrawMenuSection(inRect);
             Widgets.BeginScrollView(inRect, ref tabListScrollPos, viewRect);
             var curY = viewRect.y;
@@ -309,7 +330,7 @@ namespace VUIE
 
             tabDragDropManager.DropLocation(viewRect, null, tab =>
             {
-                ArchitectCategoryTabs.Insert(tabMouseoverIdx, tab);
+                ArchitectCategoryTabs.Place(tabMouseoverIdx, tab);
                 tabMouseoverIdx = -1;
                 return true;
             });

@@ -8,6 +8,7 @@ namespace VUIE
 {
     public class MainTabWindow_Chat : EditWindow
     {
+        private float? lastHeight;
         private Vector2 scrollPos = Vector2.zero;
 
         public MainTabWindow_Chat()
@@ -28,18 +29,21 @@ namespace VUIE
         public override void DoWindowContents(Rect inRect)
         {
             inRect = inRect.ContractedBy(7f);
-            var viewRect = new Rect(0, 0, inRect.width - 25f, Find.PlayLog.AllEntries.Count * 28f);
+            var viewRect = new Rect(0, 0, inRect.width - 25f, lastHeight ?? Find.PlayLog.AllEntries.Count * 28f);
             var listing = new Listing_Standard();
             Widgets.BeginScrollView(inRect, ref scrollPos, viewRect);
             listing.Begin(viewRect);
             var alternatingBackground = true;
+            lastHeight = 0;
             foreach (var entry in Find.PlayLog.AllEntries)
             {
                 var pov = Find.Selector.SingleSelectedThing is not null && entry.Concerns(Find.Selector.SingleSelectedThing)
                     ? Find.Selector.SingleSelectedThing
                     : entry.GetConcerns().FirstOrDefault();
                 var time = entry.Tick.ToStringTicksToTime().Colorize(ColoredText.SubtleGrayColor);
-                var rect = listing.GetRect(entry.GetTextHeight(pov, viewRect.width - 15f - 24f - 92f));
+                var height = entry.GetTextHeight(pov, viewRect.width - 15f - 24f - 92f);
+                lastHeight += height;
+                var rect = listing.GetRect(height);
                 Text.Font = GameFont.Tiny;
                 var x = rect.x;
                 Widgets.Label(new Rect(rect.x, rect.y, 92f, rect.height), time);

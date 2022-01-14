@@ -72,5 +72,11 @@ namespace VUIE
             dest.Clear();
             foreach (var pair in source) dest.Add(pair.Key, pair.Value);
         }
+
+        public static void Place<T>(this IList<T> source, int idx, T item)
+        {
+            if (idx >= source.Count) source.Add(item);
+            else source.Insert(Mathf.Clamp(0, idx, source.Count - 1), item);
+        }
     }
 }
