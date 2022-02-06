@@ -18,6 +18,7 @@ namespace VUIE
         public virtual string Label => def.LabelCap;
         public virtual string Description => def.description == "." ? "" : def.description;
         public virtual float SettingsHeight => 66f;
+        public virtual bool EnabledByDefault => true;
 
         public virtual void ExposeData()
         {
@@ -42,6 +43,7 @@ namespace VUIE
         public virtual OverlayWorker Init(OverlayDef def)
         {
             this.def = def;
+            enabled = EnabledByDefault;
             return this;
         }
 
@@ -408,5 +410,25 @@ namespace VUIE
     {
         public override bool CanShowNumbers => false;
         public override bool ShouldAutoShow() => Find.DesignatorManager.SelectedDesignator is Designator_Place {PlacingDef: ThingDef td} && td.HasComp(typeof(CompPowerPlantWind));
+    }
+
+    public class OverlayWorker_Usage : OverlayWorker_Numbers
+    {
+        private MapMeshFlagExtDirtier dirtier;
+        public override bool EnabledByDefault => false;
+
+        public override OverlayWorker Init(OverlayDef def)
+        {
+            base.Init(def);
+            dirtier = new MapMeshFlagExtDirtier();
+            return this;
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            if (DrawToggle) dirtier.DoPatches(UIMod.Harm);
+            else dirtier.UndoPatches(UIMod.Harm);
+        }
     }
 }

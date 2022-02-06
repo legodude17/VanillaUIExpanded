@@ -79,7 +79,7 @@ namespace VUIE
         public static float ArchitectWidth => 100f + (architectIcons is not null ? 16f : 0f);
         public override string LabelKey => "VUIE.Architect";
 
-        public static void MintRefresh() => mintDesPanelsCached.Invoke(DefDatabase<MainButtonDef>.GetNamedSilentFail("MintMenus"));
+        public static void MintRefresh() => mintDesPanelsCached.Invoke(DefDatabase<MainButtonDef>.GetNamedSilentFail("MintMenus").TabWindow) = null;
 
         public static void SetIcon(string defName, string path)
         {
@@ -131,7 +131,18 @@ namespace VUIE
 
             listing.ColumnWidth += 12f;
             listing.Outdent();
-            listing.Gap(6f);
+            if (Current.ProgramState == ProgramState.Playing)
+            {
+                listing.Label("VUIE.Architect.Example".Translate());
+                listing.Gap(GizmoGridDrawer.GizmoSpacing.y);
+                var gizRect = listing.GetRect(Gizmo.Height);
+                GizmoDrawer.DrawGizmos(Gen.YieldSingle(new Designator_Group(
+                    Dialog_ConfigureArchitect.ArchitectCategoryTabs.SelectMany(tab => tab.def.AllResolvedDesignators).Take(20).ToList(),
+                    "VUIE.Architect.Example".Translate())), gizRect, false, (gizmo, vector2) => true);
+                listing.Gap(GizmoGridDrawer.GizmoSpacing.y);
+            }
+
+            listing.GapLine(6f);
             listing.CheckboxLabeled("VUIE.Architect.LeftClick".Translate(), ref GroupOpenLeft, "VUIE.Architect.LeftClick.Desc".Translate());
             listing.GapLine();
             listing.Label("VUIE.Architect.Config".Translate() + ":");

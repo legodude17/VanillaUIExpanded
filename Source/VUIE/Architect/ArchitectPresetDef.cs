@@ -43,7 +43,7 @@ namespace VUIE
                         def.ResolveDesignators();
                         ArchitectModule.DoDesInit = false;
                         def.AllResolvedDesignators.Clear();
-                        def.AllResolvedDesignators.AddRange(cat.Designators.Select(DesignatorSaved.Load));
+                        def.AllResolvedDesignators.AddRange(cat.Designators.Select(DesignatorSaved.Load).Where(d => d is not null));
                         DefGenerator.AddImpliedDef(def);
                         var desTab = new ArchitectCategoryTab(def, ArchitectLoadSaver.Architect.quickSearchWidget.filter);
                         Dialog_ConfigureArchitect.ArchitectCategoryTabs.Add(desTab);

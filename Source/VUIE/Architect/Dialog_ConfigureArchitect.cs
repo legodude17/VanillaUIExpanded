@@ -6,6 +6,7 @@ using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using VFECore.UItils;
 
 namespace VUIE
 {
@@ -14,7 +15,8 @@ namespace VUIE
         public static HashSet<Type> IgnoreDesignatorTypes = new()
         {
             typeof(Designator_Dropdown),
-            typeof(Designator_Group)
+            typeof(Designator_Group),
+            AccessTools.TypeByName("RFF_Code.Designator_Terraform")
         };
 
         public static Dictionary<Type, DesignatorTypeHandling> SpecialHandling = new();
@@ -28,6 +30,9 @@ namespace VUIE
 
         private readonly List<Designator> unassigned = new();
         private int curAvailablePage;
+        private int curPageGroup;
+
+        private int curPageMain;
 
         private int curUnassignedPage;
 
@@ -47,7 +52,9 @@ namespace VUIE
                     .Where(d => d.canGenerateDefaultDesignator && d.designationCategory != null)
                     .Select(def => new Designator_Build(def)),
                 des => (des as Designator_Build)?.PlacingDef.defName,
-                (data, type) => new Designator_Build((BuildableDef) DefDatabase<ThingDef>.GetNamedSilentFail(data) ?? DefDatabase<TerrainDef>.GetNamedSilentFail(data))));
+                (data, type) => data is null
+                    ? null
+                    : new Designator_Build((BuildableDef) DefDatabase<ThingDef>.GetNamedSilentFail(data) ?? DefDatabase<TerrainDef>.GetNamedSilentFail(data))));
             if (ModLister.HasActiveModWithName("More Planning 1.3"))
                 SpecialHandling.Add(AccessTools.TypeByName("MorePlanning.Designators.SelectColorDesignator"),
                     DesignatorTypeHandling.Create(
@@ -87,7 +94,7 @@ namespace VUIE
                         Log.Error($"[VUIE] Got error while attempting to create a Designator of type {type}: {e}");
                     }
 
-            var not = typeof(Designator).AllSubclassesNonAbstract()
+            var not = typeof(Designator).AllSubclassesNonAbstract().Except(IgnoreDesignatorTypes)
                 .Where(type => !SpecialHandling.ContainsKey(type) && type.GetConstructors().All(m => m.GetParameters().Length != 0)).ToList();
             if (not.Any())
             {
@@ -111,10 +118,11 @@ namespace VUIE
                 var state = ArchitectLoadSaver.SaveState("VUIE.Main".Translate());
                 module.ActiveIndex = module.SavedStates.Count;
                 module.AddState(state);
-                if (ArchitectModule.MintCompat) ArchitectModule.MintRefresh();
             }
             else
                 module.SavedStates[module.ActiveIndex] = ArchitectLoadSaver.SaveState(module.SavedStates[module.ActiveIndex].Name);
+
+            if (ArchitectModule.MintCompat) ArchitectModule.MintRefresh();
         }
 
         public override void DoWindowContents(Rect inRect)
@@ -128,18 +136,19 @@ namespace VUIE
             var selectedRect = gizmoRect.BottomHalf().ContractedBy(12f);
             gizmoRect = gizmoRect.TopHalf().ContractedBy(12f);
             selectedRect.yMax -= 50f;
-            Widgets.DrawMenuSection(gizmoRect);
-            Widgets.DrawMenuSection(selectedRect);
 
             if (selectedCategoryTab != null)
             {
                 var flag = false;
-                gizmoRect = gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x * 3);
+                var controlsRect = gizmoRect.LeftHalf();
+                controlsRect.height = 40f;
+                controlsRect.y += gizmoRect.height + 5f;
+                Widgets.DrawMenuSection(gizmoRect);
                 var gizmos = selectedCategoryTab.def.AllResolvedDesignators.Cast<Gizmo>().ToList();
                 Placeholder placeholder = null;
                 if (desDragDropManager.DraggingNow && Mouse.IsOver(gizmoRect))
                 {
-                    var insertBefore = GizmoDrawer.Format(gizmos, gizmoRect, false, AdditionalSpacing)
+                    var insertBefore = GizmoDrawer.Format(gizmos, gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x * 3), false, AdditionalSpacing)
                         .FirstOrFallback(
                             i => Mouse.IsOver(new Rect(i.Item1.x - GizmoGridDrawer.GizmoSpacing.x - AdditionalSpacing.x, i.Item1.y,
                                 GizmoGridDrawer.GizmoSpacing.x + AdditionalSpacing.x, i.Item1.height)),
@@ -153,9 +162,15 @@ namespace VUIE
                     }
                 }
 
-                GizmoDrawer.DrawGizmos(gizmos, gizmoRect, false, (giz, _) =>
+                GizmoDrawer.DrawGizmosWithPages(gizmos, ref curPageMain, gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x * 3), controlsRect, false, (giz, _) =>
                 {
-                    if (giz is Designator_Dropdown or Designator_Group) selected = (Designator) giz;
+                    if (Event.current.shift)
+                    {
+                        selectedCategoryTab.def.AllResolvedDesignators.Remove(giz as Designator);
+                        unassigned.Add(giz as Designator);
+                    }
+                    else if (giz is Designator_Dropdown or Designator_Group) selected = (Designator) giz;
+
                     return true;
                 }, useHotkeys: false, additionalSpacing: AdditionalSpacing, drawExtras: (gizmo, rect) =>
                 {
@@ -200,11 +215,13 @@ namespace VUIE
                     });
             }
 
+            var labelRect = selectedRect.TakeTopPart(40f).RightHalf();
+            Widgets.DrawMenuSection(selectedRect);
+
             if (selected != null)
             {
-                var labelRect = selectedRect.TopPartPixels(20f);
-                Widgets.Label(labelRect, selected.Label);
-                selectedRect.yMin += 30f;
+                Widgets.Label(labelRect.LeftHalf(), selected.Label + " V");
+                selectedRect.yMin += 45f;
                 var children = selected switch
                 {
                     Designator_Group group => group.Elements,
@@ -213,7 +230,8 @@ namespace VUIE
                 };
                 if (children != null)
                 {
-                    GizmoDrawer.DrawGizmos(children, selectedRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), false, (giz, topLeft) => true, useHotkeys: false,
+                    GizmoDrawer.DrawGizmosWithPages(children, ref curPageGroup, selectedRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), labelRect.RightHalf(), false,
+                        (giz, topLeft) => true, useHotkeys: false,
                         drawExtras: (gizmo, rect) =>
                         {
                             if (desDragDropManager.TryStartDrag(gizmo as Designator, rect)) children.Remove(gizmo as Designator);
@@ -347,6 +365,8 @@ namespace VUIE
                         label = str
                     };
                     catDef.ResolveDesignators();
+                    if (ArchitectModule.IconsActive) ArchitectModule.SetIcon(catDef.defName, ArchitectModule.AllPossibleIcons().RandomElement());
+                    DefGenerator.AddImpliedDef(catDef);
                     ArchitectCategoryTabs.Add(new ArchitectCategoryTab(catDef, ((MainTabWindow_Architect) MainButtonDefOf.Architect.TabWindow).quickSearchWidget.filter));
                 });
         }

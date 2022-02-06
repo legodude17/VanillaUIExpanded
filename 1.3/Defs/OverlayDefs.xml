@@ -68,7 +68,7 @@
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>WalkSpeed</defName>
-        <label>toggle path cost overlay</label>
+        <label>toggle walk speed overlay</label>
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_WalkSpeed</iconPath>
         <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
@@ -76,9 +76,9 @@
     <VUIE.OverlayDef>
         <defName>Usage</defName>
         <label>toggle usage overlay</label>
-        <description>Shows how often your pawns are in each cell</description>
+        <description>Shows how often your pawns are in each cell. WARNING: May cause performance issues.</description>
         <iconPath>UI/PlaySettings/Button_Usage</iconPath>
-        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+        <workerClass>VUIE.OverlayWorker_Usage</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Cleanliness</defName>

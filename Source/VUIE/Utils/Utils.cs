@@ -78,5 +78,10 @@ namespace VUIE
             if (idx >= source.Count) source.Add(item);
             else source.Insert(Mathf.Clamp(0, idx, source.Count - 1), item);
         }
+
+        public static void ConfirmAndRestart()
+        {
+            Dialog_MessageBox.CreateConfirmation("VUIE.ConfirmRestart.Desc".Translate(), GenCommandLine.Restart, true, "VUIE.ConfirmRestart".Translate());
+        }
     }
 }

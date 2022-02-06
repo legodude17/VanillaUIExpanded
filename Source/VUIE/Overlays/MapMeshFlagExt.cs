@@ -12,6 +12,11 @@ namespace VUIE
             harm.Patch(AccessTools.Method(typeof(Pawn), nameof(Pawn.Tick)), postfix: new HarmonyMethod(GetType(), nameof(RecordUsage)));
         }
 
+        public void UndoPatches(Harmony harm)
+        {
+            harm.Unpatch(AccessTools.Method(typeof(Pawn), nameof(Pawn.Tick)), HarmonyPatchType.Postfix, harm.Id);
+        }
+
         public static void RecordUsage(Pawn __instance)
         {
             if (!__instance.Spawned || !__instance.IsColonist || !OverlayDefOf.Usage.Worker.DrawToggle) return;

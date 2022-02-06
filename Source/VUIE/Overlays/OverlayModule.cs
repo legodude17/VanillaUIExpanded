@@ -13,7 +13,6 @@ namespace VUIE
 {
     public class OverlayModule : Module
     {
-        private readonly MapMeshFlagExtDirtier dirtier = new();
         private readonly Dictionary<OverlayDef, string> labelCache = new();
         public bool MoveOverlays;
         private Vector2 settingsScrollPos = Vector2.zero;
@@ -74,7 +73,6 @@ namespace VUIE
                 postfix: new HarmonyMethod(GetType(), nameof(OverlaysOnGUI)));
             harm.Patch(AccessTools.Method(typeof(MapInterface), nameof(MapInterface.MapInterfaceUpdate)),
                 postfix: new HarmonyMethod(GetType(), nameof(OverlaysUpdate)));
-            dirtier.DoPatches(harm);
         }
 
         public static void OverlaysOnGUI()

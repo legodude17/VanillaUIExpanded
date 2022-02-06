@@ -14,7 +14,7 @@ namespace VUIE
         private Vector2 scrollPosition = new(0, 0);
         private string searchText = "";
 
-        public Dialog_FloatMenuGrid(List<FloatMenuOption> opts)
+        public Dialog_FloatMenuGrid(IEnumerable<FloatMenuOption> opts)
         {
             doCloseX = true;
             doCloseButton = false;
@@ -32,7 +32,7 @@ namespace VUIE
             }
         }
 
-        public Dialog_FloatMenuGrid(List<FloatMenuOption> opts, FloatMenuModule.CallInfo caller) : this(opts) => source = caller;
+        public Dialog_FloatMenuGrid(IEnumerable<FloatMenuOption> opts, FloatMenuModule.CallInfo caller) : this(opts) => source = caller;
 
         public override Vector2 InitialSize => new(620f, 500f);
 

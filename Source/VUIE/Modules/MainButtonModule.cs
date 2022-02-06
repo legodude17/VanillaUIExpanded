@@ -20,6 +20,27 @@ namespace VUIE
         private static List<string> order;
         private static Dictionary<string, bool> minimized;
         private static Dictionary<string, bool> hidden;
+        private static bool reset;
+        public override string LabelKey => "VUIE.MainButtons".Translate();
+
+        public override void DoSettingsWindowContents(Rect inRect)
+        {
+            base.DoSettingsWindowContents(inRect);
+            var listing = new Listing_Standard();
+            listing.Begin(inRect);
+            if (listing.ButtonText("VUIE.MainButtons.Reset".Translate())) Reset();
+            listing.End();
+        }
+
+        private static void Reset()
+        {
+            reset = true;
+            order = new List<string>();
+            minimized = new Dictionary<string, bool>();
+            hidden = new Dictionary<string, bool>();
+            UIMod.Settings.Write();
+            Utils.ConfirmAndRestart();
+        }
 
         public override void SaveSettings()
         {
@@ -54,14 +75,22 @@ namespace VUIE
 
             if (hidden is not null)
                 foreach (var kv in hidden)
-                    if (kv.Key == UIDefOf.VUIE_Overlays.defName)
-                        UIDefOf.VUIE_Overlays.buttonVisible = UIMod.GetModule<OverlayModule>().MoveOverlays;
-                    else if (__instance.allButtonsInOrder.FirstOrDefault(def => def.defName == kv.Key) is { } buttonDef)
+                    if (kv.Key != UIDefOf.VUIE_Overlays.defName && __instance.allButtonsInOrder.FirstOrDefault(def => def.defName == kv.Key) is { } buttonDef)
                         buttonDef.buttonVisible = !kv.Value;
+
+
+            UIDefOf.VUIE_Overlays.buttonVisible = UIMod.GetModule<OverlayModule>().MoveOverlays;
         }
 
         public static bool DoButtons(MainButtonsRoot __instance)
         {
+            if (reset)
+            {
+                __instance.allButtonsInOrder.Clear();
+                __instance.allButtonsInOrder.AddRange(DefDatabase<MainButtonDef>.AllDefs.OrderBy(x => x.order));
+                reset = false;
+            }
+
             if (UIDefOf.UI_EditMode.Worker.Active)
             {
                 lastEditMode = true;

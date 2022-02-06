@@ -71,10 +71,10 @@ namespace VUIE
                 var res = Instance.FloatMenuSettings[key];
                 if (!res.HasValue && menu.options.Count > 30 || res.HasValue && res.Value)
                 {
-                    if (Instance.UseGrid && menu.options.All(opt => opt.shownItem is not null))
-                        __instance.Add(new Dialog_FloatMenuGrid(menu.options, key));
+                    if (Instance.UseGrid && menu.options.Where(opt => opt.labelInt != "VUIE.FloatMenus.SwitchToFull".Translate()).All(opt => opt.shownItem is not null))
+                        __instance.Add(new Dialog_FloatMenuGrid(menu.options.Where(opt => opt.labelInt != "VUIE.FloatMenus.SwitchToFull".Translate()), key));
                     else
-                        __instance.Add(new Dialog_FloatMenuOptions(menu.options, key));
+                        __instance.Add(new Dialog_FloatMenuOptions(menu.options.Where(opt => opt.labelInt != "VUIE.FloatMenus.SwitchToFull".Translate()), key));
                     return false;
                 }
             }

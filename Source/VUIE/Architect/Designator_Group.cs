@@ -104,13 +104,13 @@ namespace VUIE
                 return;
             }
 
-            var gizmos = VisibleElements.ToList();
+            var gizmos = GizmoDrawer.State.GroupGizmos(VisibleElements);
             rect.position += new Vector2(iconOffset.x * rect.size.x, iconOffset.y * rect.size.y);
             GUI.color = !disabled || parms.lowLight ? IconDrawColor : IconDrawColor.SaturationChanged(0f);
             var grid = (module.GroupDisplay == ArchitectModule.GroupDisplayType.SquareGrid
                 ? GizmoDrawer.DivideIntoGrid(rect, Math.Min(gizmos.Count, (int) Math.Pow(module.MaxSize, 2)))
                 : GizmoDrawer.DivideIntoGrid(rect, gizmos.Count, Mathf.Min(module.MaxSize, Mathf.CeilToInt(gizmos.Count / 2f)), 2)).ToList();
-            display = gizmos.Zip(grid, (designator, rect1) => (designator, rect1)).ToList();
+            display = gizmos.Select(group => group[0] as Designator).Zip(grid, (designator, rect1) => (designator, rect1)).ToList();
             Active = display?.FirstOrDefault(tuple => Mouse.IsOver(tuple.Item2)).Item1;
 
             if (parms.lowLight) GUI.color = GUI.color.ToTransparent(0.6f);
@@ -141,7 +141,7 @@ namespace VUIE
 
         public override void ProcessInput(Event ev)
         {
-            if (ev.button == 0 && Active != null && !module.GroupOpenLeft) Active.ProcessInput(ev);
+            if (ev is {button: 0} && Active != null && !module.GroupOpenLeft) Active.ProcessInput(ev);
             else OpenMenu();
         }
 

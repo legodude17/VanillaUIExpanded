@@ -17,6 +17,7 @@ namespace VUIE
 
         private static string searchTerm = "";
         private static bool tdIntegration = true;
+        private static bool oldTdIntegration = true;
 
         public override string LabelKey => "VUIE.ModCompat";
 
@@ -33,6 +34,9 @@ namespace VUIE
         {
             base.SaveSettings();
             Scribe_Values.Look(ref tdIntegration, "tdIntegration", true);
+            if (Scribe.mode == LoadSaveMode.Saving && tdIntegration != oldTdIntegration) Utils.ConfirmAndRestart();
+
+            oldTdIntegration = tdIntegration;
         }
 
         public override void DoPatches(Harmony harm)

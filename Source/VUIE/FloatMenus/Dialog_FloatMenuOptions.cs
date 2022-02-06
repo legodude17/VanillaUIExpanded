@@ -16,13 +16,13 @@ namespace VUIE
         private Vector2 scrollPosition = new(0, 0);
         private string searchText = "";
 
-        public Dialog_FloatMenuOptions(List<FloatMenuOption> opts)
+        public Dialog_FloatMenuOptions(IEnumerable<FloatMenuOption> opts)
         {
-            options = opts;
+            options = opts.ToList();
             doCloseX = true;
             doCloseButton = false;
             closeOnClickedOutside = true;
-            foreach (var option in opts)
+            foreach (var option in options)
             {
                 var shown = option.shownItem;
                 if (option.extraPartWidth <= 0f && option.extraPartOnGUI == null && shown != null)
@@ -42,7 +42,7 @@ namespace VUIE
             }
         }
 
-        public Dialog_FloatMenuOptions(List<FloatMenuOption> opts, FloatMenuModule.CallInfo caller) : this(opts) => source = caller;
+        public Dialog_FloatMenuOptions(IEnumerable<FloatMenuOption> opts, FloatMenuModule.CallInfo caller) : this(opts) => source = caller;
 
         public override Vector2 InitialSize => new(620f, 500f);
 

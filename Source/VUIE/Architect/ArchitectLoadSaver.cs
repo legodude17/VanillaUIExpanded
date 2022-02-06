@@ -23,17 +23,23 @@ namespace VUIE
             Architect.desPanelsCached.Clear();
             foreach (var tab in saved.Tabs)
             {
-                var def = DefDatabase<DesignationCategoryDef>.GetNamedSilentFail(tab.defName) ?? new DesignationCategoryDef
+                var def = DefDatabase<DesignationCategoryDef>.GetNamedSilentFail(tab.defName);
+                if (def is null)
                 {
-                    defName = tab.defName,
-                    label = tab.label
-                };
+                    def = new DesignationCategoryDef
+                    {
+                        defName = tab.defName,
+                        label = tab.label
+                    };
+                    DefGenerator.AddImpliedDef(def);
+                }
+
                 ArchitectModule.DoDesInit = true;
                 def.ResolveDesignators();
                 if (tab.Designators != null)
                 {
                     def.AllResolvedDesignators.Clear();
-                    def.AllResolvedDesignators.AddRange(tab.Designators.Select(DesignatorSaved.Load));
+                    def.AllResolvedDesignators.AddRange(tab.Designators.Select(DesignatorSaved.Load).Where(d => d is not null));
                 }
 
                 var desTab = new ArchitectCategoryTab(def, Architect.quickSearchWidget.filter);
@@ -106,17 +112,18 @@ namespace VUIE
         {
             Designator des;
             var type = AccessTools.TypeByName(saved.Type);
+            if (type is null) return null;
             if (Dialog_ConfigureArchitect.SpecialHandling.ContainsKey(type))
                 des = Dialog_ConfigureArchitect.SpecialHandling[type].Load(saved.AdditionalData, type);
             else
                 switch (saved.Type)
                 {
                     case "VUIE.Designator_Group":
-                        des = new Designator_Group(saved.Elements.Select(Load).ToList(), saved.Name);
+                        des = new Designator_Group(saved.Elements.Select(Load).Where(d => d is not null).ToList(), saved.Name);
                         break;
                     case "RimWorld.Designator_Dropdown":
                         var dropdown = new Designator_Dropdown();
-                        foreach (var designator in saved.Elements.Select(Load)) dropdown.Add(designator);
+                        foreach (var designator in saved.Elements.Select(Load).Where(d => d is not null)) dropdown.Add(designator);
                         des = dropdown;
                         break;
                     default:

@@ -13,7 +13,8 @@ namespace VUIE
 
         public static void DrawGizmosWithPages(IEnumerable<Gizmo> gizmos, ref int curPage, Rect gizmosRect, Rect controlsRect, bool forceShrunk = false,
             Func<Gizmo, Vector2, bool> onClicked = null,
-            Action<Gizmo> onMouseOver = null, bool useHotkeys = true, Action<Gizmo, Rect> drawExtras = null, QuickSearchWidget searchWidget = null, bool jump = false)
+            Action<Gizmo> onMouseOver = null, bool useHotkeys = true, Action<Gizmo, Rect> drawExtras = null, QuickSearchWidget searchWidget = null, bool jump = false,
+            Vector2 additionalSpacing = default, bool sort = true)
         {
             var groups = SplitIntoGroups(gizmos.ToList(), gizmosRect, forceShrunk);
             curPage = Mathf.Clamp(curPage, 0, groups.Count - 1);
@@ -26,7 +27,8 @@ namespace VUIE
 
             DrawGizmos(groups[curPage], gizmosRect, forceShrunk, onClicked, onMouseOver,
                 gizmo => Matches(searchWidget?.filter, gizmo),
-                gizmo => gizmo is Command c && searchWidget != null && searchWidget.filter.Active && !searchWidget.filter.Matches(c.Label), useHotkeys, drawExtras);
+                gizmo => gizmo is Command c && searchWidget != null && searchWidget.filter.Active && !searchWidget.filter.Matches(c.Label), useHotkeys, drawExtras,
+                additionalSpacing, sort);
         }
 
         private static bool Matches(QuickSearchFilter filter, Gizmo gizmo) => gizmo is Command c && filter is {Active: true} && filter.Matches(c.Label);
@@ -34,14 +36,16 @@ namespace VUIE
         private static void DoPageControls(ref int curPage, int pages, Rect inRect, QuickSearchWidget searchWidget, Rect? checkForMouseOver = null)
         {
             var row = new WidgetRow(inRect.x, inRect.y, UIDirection.RightThenDown);
+            var width = Mathf.Min(200f, inRect.width - 136f);
             if (row.ButtonText("<", fixedWidth: 50f, active: curPage > 0)) curPage--;
             row.Gap(12f);
+            Text.Font = GameFont.Small;
             row.Label("VUIE.PageOf".Translate(curPage + 1, pages));
             if (searchWidget != null)
             {
                 row.Gap(12f);
-                var rect = new Rect(row.LeftX(200f), row.curY, 200f, inRect.height);
-                row.IncrementPosition(200f);
+                var rect = new Rect(row.LeftX(width), row.curY, width, inRect.height);
+                row.IncrementPosition(width);
                 searchWidget.OnGUI(rect);
             }
 
@@ -88,7 +92,7 @@ namespace VUIE
                     {
                         curLoc.x = inRect.xMin;
                         curLoc.y += Gizmo.Height + GizmoGridDrawer.GizmoSpacing.y;
-                        if (curLoc.y + Gizmo.Height * 2 > inRect.yMax)
+                        if (curLoc.y + Gizmo.Height + GizmoGridDrawer.GizmoSpacing.y > inRect.yMax)
                         {
                             result.Add(curGroup);
                             curGroup = new List<Gizmo>();
@@ -327,7 +331,7 @@ namespace VUIE
             }
         }
 
-        private static List<Gizmo> FindMatchingGroup(Gizmo toMatch)
+        private static IEnumerable<Gizmo> FindMatchingGroup(Gizmo toMatch)
         {
             return StateStack.Peek().gizmoGroups.FirstOrDefault(group => group.Contains(toMatch));
         }
@@ -381,6 +385,28 @@ namespace VUIE
             public readonly List<Command> shrinkableCommands = new();
 
             public readonly List<Gizmo> tmpAllGizmos = new();
+
+            public static List<List<Gizmo>> GroupGizmos(IEnumerable<Gizmo> gizmos)
+            {
+                var groups = new List<List<Gizmo>>();
+                foreach (var gizmo in gizmos)
+                {
+                    var group = groups.FirstOrDefault(g => g[0].GroupsWith(gizmo));
+                    if (group != null)
+                    {
+                        group.Add(gizmo);
+                        group[0].MergeWith(gizmo);
+                    }
+                    else
+                    {
+                        var list = SimplePool<List<Gizmo>>.Get();
+                        list.Add(gizmo);
+                        groups.Add(list);
+                    }
+                }
+
+                return groups;
+            }
 
             public void Init(IEnumerable<Gizmo> gizmos, bool sort = true)
             {
