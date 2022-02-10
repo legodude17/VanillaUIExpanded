@@ -89,6 +89,8 @@ namespace VUIE
                 defaultLabel = option.Label;
             }
 
+            public override IEnumerable<FloatMenuOption> RightClickFloatMenuOptions => Gen.YieldSingle(option);
+
             public override void DrawIcon(Rect rect, Material buttonMat, GizmoRenderParms parms)
             {
                 Widgets.ThingIcon(rect, option.shownItem, null, option.thingStyle ?? Faction.OfPlayer.ideos?.PrimaryIdeo?.GetStyleFor(option.shownItem) ?? null);
@@ -98,7 +100,8 @@ namespace VUIE
             {
                 var result = base.GizmoOnGUI(topLeft, maxWidth, parms);
                 if (result.State == GizmoState.Interacted) chosen(option);
-                return result;
+                else if (result.State == GizmoState.OpenedFloatMenu) Find.WindowStack.Add(new Dialog_InfoCard(option.shownItem));
+                return new GizmoResult(GizmoState.Mouseover, result.InteractEvent);
             }
         }
     }
