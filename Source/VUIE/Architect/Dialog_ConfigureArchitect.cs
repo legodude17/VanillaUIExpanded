@@ -113,14 +113,7 @@ namespace VUIE
         {
             base.PostClose();
             var module = UIMod.GetModule<ArchitectModule>();
-            if (module.ActiveIndex == module.VanillaIndex)
-            {
-                var state = ArchitectLoadSaver.SaveState("VUIE.Main".Translate());
-                module.ActiveIndex = module.SavedStates.Count;
-                module.AddState(state);
-            }
-            else
-                module.SavedStates[module.ActiveIndex] = ArchitectLoadSaver.SaveState(module.SavedStates[module.ActiveIndex].Name);
+            module.SavedStates[module.ActiveIndex] = ArchitectLoadSaver.SaveState(module.SavedStates[module.ActiveIndex].Name);
 
             if (ArchitectModule.MintCompat) ArchitectModule.MintRefresh();
         }

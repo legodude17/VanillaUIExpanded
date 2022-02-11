@@ -21,7 +21,7 @@ namespace VUIE
         private static Dictionary<string, bool> minimized;
         private static Dictionary<string, bool> hidden;
         private static bool reset;
-        public override string LabelKey => "VUIE.MainButtons".Translate();
+        public override string LabelKey => "VUIE.MainButtons";
 
         public override void DoSettingsWindowContents(Rect inRect)
         {

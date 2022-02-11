@@ -30,6 +30,8 @@ namespace VUIE
         private static Dictionary<string, string> iconChanges = new();
         private static readonly Func<string, Texture2D> loadIcon;
         private static readonly AccessTools.FieldRef<object, List<ArchitectCategoryTab>> mintDesPanelsCached;
+
+        private static readonly Dictionary<string, string> truncationCache = new();
         public int ActiveIndex = -1;
         private string buffer;
 
@@ -57,7 +59,7 @@ namespace VUIE
 
                 if (me.ActiveIndex < 0) me.ActiveIndex = me.VanillaIndex;
                 if (me.ActiveIndex == me.VanillaIndex) return;
-                ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex]);
+                me.SetActive(me.SavedStates[me.ActiveIndex]);
                 DoDesInit = false;
             });
             var type = AccessTools.TypeByName("ArchitectIcons.ArchitectIconsMod");
@@ -101,7 +103,9 @@ namespace VUIE
             base.DoSettingsWindowContents(inRect);
             var listing = new Listing_Standard();
             listing.Begin(inRect);
-            if (Current.ProgramState == ProgramState.Playing && listing.ButtonText("VUIE.Architect.Open".Translate())) Find.WindowStack.Add(new Dialog_ConfigureArchitect());
+            if (Current.ProgramState != ProgramState.Playing) listing.Label("VUIE.Architect.Disabled.NotPlaying".Translate());
+            else if (ActiveIndex == VanillaIndex) listing.Label("VUIE.Architect.Disabled.Vanilla".Translate());
+            else if (listing.ButtonText("VUIE.Architect.Open".Translate())) Find.WindowStack.Add(new Dialog_ConfigureArchitect());
             listing.GapLine();
             listing.Label("VUIE.Architect.GroupDisplay".Translate() + ":");
             listing.Indent();
@@ -150,25 +154,26 @@ namespace VUIE
             {
                 var rect = listing.GetRect(30f);
                 var row = new WidgetRow(rect.x, rect.y, UIDirection.RightThenDown);
-                row.Label(state.Name);
-                row.Gap(50f);
+                var text = state.Name.Truncate(80f, truncationCache);
+                row.Label(text);
+                row.Gap(100f - Text.CalcSize(text).x);
                 row.Label("VUIE.Vanilla".Translate() + ":");
                 row.Icon(state.Vanilla ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
                 row.Gap(12f);
                 row.Label("VUIE.Active".Translate() + ":");
                 row.Icon(SavedStates.IndexOf(state) == ActiveIndex ? Widgets.CheckboxOnTex : Widgets.CheckboxOffTex);
                 row.Gap(12f);
-                if (row.ButtonText("VUIE.SetActive".Translate()))
-                {
-                    ActiveIndex = SavedStates.IndexOf(state);
-                    ArchitectLoadSaver.RestoreState(state);
-                }
+                if (row.ButtonText("VUIE.SetActive".Translate())) SetActive(state);
 
                 row.Gap(3f);
                 if (row.ButtonText("VUIE.Remove".Translate()))
                 {
-                    SavedStates.Remove(state);
-                    if (ActiveIndex >= SavedStates.Count) ActiveIndex = SavedStates.Count - 1;
+                    if (state.Vanilla) Messages.Message("VUIE.Architect.Disabled.RemoveVanilla".Translate(), MessageTypeDefOf.RejectInput);
+                    else
+                    {
+                        SavedStates.Remove(state);
+                        if (ActiveIndex >= SavedStates.Count) SetActive(SavedStates[SavedStates.Count - 1]);
+                    }
                 }
 
                 row.Gap(3f);
@@ -184,10 +189,16 @@ namespace VUIE
             listing.End();
         }
 
+        public void SetActive(ArchitectSaved state)
+        {
+            ActiveIndex = SavedStates.IndexOf(state);
+            ArchitectLoadSaver.RestoreState(state);
+        }
+
         public void AddState(ArchitectSaved state)
         {
             var i = 1;
-            while (SavedStates.Any(s => s.Name == state.Name)) state.Name = $"Untitled {i}";
+            while (SavedStates.Any(s => s.Name == state.Name)) state.Name = $"Untitled {i++}";
             SavedStates.Add(state);
         }
 
