@@ -162,7 +162,7 @@
         <defName>OilGrid</defName>
         <label>toggle oil grid</label>
         <description>.</description>
-        <iconPath>Rimefeller/UI/OilSpill</iconPath>
+        <iconPath>UI/PlaySettings/OilGrid</iconPath>
         <workerClass>VUIE.OverlayWorker_OilGrid</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
