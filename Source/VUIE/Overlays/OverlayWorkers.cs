@@ -131,6 +131,7 @@ namespace VUIE
         protected bool Active;
         protected abstract string ModName { get; }
         public override bool DrawToggle => Active && base.DrawToggle;
+        public override Texture2D Icon => Active ? base.Icon : TexButton.Add;
 
         public override OverlayWorker Init(OverlayDef def)
         {

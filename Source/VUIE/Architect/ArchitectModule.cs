@@ -59,7 +59,7 @@ namespace VUIE
 
                 if (me.ActiveIndex < 0) me.ActiveIndex = me.VanillaIndex;
                 if (me.ActiveIndex == me.VanillaIndex) return;
-                me.SetActive(me.SavedStates[me.ActiveIndex]);
+                ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex]);
                 DoDesInit = false;
             });
             var type = AccessTools.TypeByName("ArchitectIcons.ArchitectIconsMod");
@@ -172,7 +172,7 @@ namespace VUIE
                     else
                     {
                         SavedStates.Remove(state);
-                        if (ActiveIndex >= SavedStates.Count) SetActive(SavedStates[SavedStates.Count - 1]);
+                        if (ActiveIndex >= SavedStates.Count) SetActive(SavedStates.Count - 1);
                     }
                 }
 
@@ -193,6 +193,12 @@ namespace VUIE
         {
             ActiveIndex = SavedStates.IndexOf(state);
             ArchitectLoadSaver.RestoreState(state);
+        }
+
+        public void SetActive(int index)
+        {
+            ActiveIndex = index;
+            ArchitectLoadSaver.RestoreState(SavedStates[index]);
         }
 
         public void AddState(ArchitectSaved state)

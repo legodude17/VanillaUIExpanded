@@ -17,6 +17,7 @@ namespace VUIE
 
         public override void Regenerate()
         {
+            if (!Visible) return;
             ClearSubMeshes(MeshParts.All);
             var y = AltitudeLayer.MetaOverlays.AltitudeFor();
             foreach (var cell in section.CellRect)
