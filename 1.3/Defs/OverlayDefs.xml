@@ -121,7 +121,7 @@
         <label>toggle high-voltage wire grid</label>
         <description>.</description>
         <iconPath>Rimatomics/UI/HighVoltage</iconPath>
-        <workerClass>VUIE.OverlayWorker_Sewage</workerClass>
+        <workerClass>VUIE.OverlayWorker_HighVoltage</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Cooling</defName>
