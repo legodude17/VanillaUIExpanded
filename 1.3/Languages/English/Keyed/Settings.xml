@@ -51,6 +51,8 @@
     <VUIE.MainButtons.Reset>Reset bottom buttons to vanilla</VUIE.MainButtons.Reset>
     <VUIE.ConfirmRestart.Desc>This action requires a restart of the game. Restart now?</VUIE.ConfirmRestart.Desc>
     <VUIE.ConfirmRestart>Confirm Restart Game</VUIE.ConfirmRestart>
+    <VUIE.Overlays.EnableAll>Enable all</VUIE.Overlays.EnableAll>
+    <VUIE.Overlays.DisabledAll>Disable all</VUIE.Overlays.DisabledAll>
     <VUIE.ModCompat.TD.Desc>Disable the overlays system in TD Enhancement Pack in favor of the ones in Vanilla UI Expanded. Requires restart to take effect.</VUIE.ModCompat.TD.Desc>
     <VUIE.Debug.HideNotMatch.Desc>By default, RimWorld simply highlights search matches in debug action menus. With this setting on, they will instead be completely hidden. May increase performance when searching with lots of options.</VUIE.Debug.HideNotMatch.Desc>
 </LanguageData>

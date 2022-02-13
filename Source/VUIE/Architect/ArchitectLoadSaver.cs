@@ -9,7 +9,10 @@ namespace VUIE
 {
     public static class ArchitectLoadSaver
     {
-        public static MainTabWindow_Architect Architect => (MainTabWindow_Architect) MainButtonDefOf.Architect.TabWindow;
+        private static MainTabWindow_Architect architect;
+
+        private static readonly Dictionary<ArchitectSaved, List<List<Designator>>> CACHE = new();
+        public static MainTabWindow_Architect Architect => architect ?? (MainTabWindow_Architect) MainButtonDefOf.Architect.TabWindow;
 
         public static ArchitectSaved SaveState(string name, bool vanilla = false) => new()
         {
@@ -18,10 +21,19 @@ namespace VUIE
             Tabs = Architect.desPanelsCached.Select(ArchitectTabSaved.Save).ToList()
         };
 
-        public static void RestoreState(ArchitectSaved saved)
+        public static void RestoreState(ArchitectSaved saved, MainTabWindow_Architect instance = null)
         {
+            Log.Message("[VUIE] Restoring saved architect state: " + saved.Name);
+            architect = instance;
+            if (!CACHE.TryGetValue(saved, out var tabs))
+            {
+                tabs = saved.Tabs.Select(tab => tab.Designators.Select(DesignatorSaved.Load).Where(d => d is not null).ToList()).ToList();
+                CACHE.Add(saved, tabs);
+            }
+
+
             Architect.desPanelsCached.Clear();
-            foreach (var tab in saved.Tabs)
+            foreach (var (tab, contents) in saved.Tabs.Zip(tabs, (tabSaved, list) => (tabSaved, list)))
             {
                 var def = DefDatabase<DesignationCategoryDef>.GetNamedSilentFail(tab.defName);
                 if (def is null)
@@ -34,17 +46,18 @@ namespace VUIE
                     DefGenerator.AddImpliedDef(def);
                 }
 
-                ArchitectModule.DoDesInit = true;
-                def.ResolveDesignators();
                 if (tab.Designators != null)
                 {
+                    def.resolvedDesignators ??= new List<Designator>();
                     def.AllResolvedDesignators.Clear();
-                    def.AllResolvedDesignators.AddRange(tab.Designators.Select(DesignatorSaved.Load).Where(d => d is not null));
+                    def.AllResolvedDesignators.AddRange(contents);
                 }
 
                 var desTab = new ArchitectCategoryTab(def, Architect.quickSearchWidget.filter);
                 Architect.desPanelsCached.Add(desTab);
             }
+
+            architect = null;
 
             if (ArchitectModule.MintCompat) ArchitectModule.MintRefresh();
         }

@@ -21,8 +21,9 @@ namespace VUIE
         {
             Elements = inGroup;
             label = str;
-            var des = inGroup.First();
+            var des = inGroup.FirstOrDefault();
             if (module.GroupDisplay == ArchitectModule.GroupDisplayType.Vanilla) Active = des;
+            if (des == null) return;
             icon = des.icon;
             iconDrawScale = des.iconDrawScale;
             iconProportions = des.iconProportions;

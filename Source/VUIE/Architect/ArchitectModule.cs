@@ -10,7 +10,6 @@ using Verse;
 
 namespace VUIE
 {
-    [StaticConstructorOnStartup]
     public class ArchitectModule : Module
     {
         public enum GroupDisplayType
@@ -23,7 +22,6 @@ namespace VUIE
         public static ArchitectCategoryTab CurrentTab;
 
         public static Gizmo overrideMouseOverGizmo;
-        public static bool DoDesInit = true;
         private static readonly FastInvokeHandler architectIcons;
         private static readonly AccessTools.FieldRef<object, Dictionary<string, Texture2D>> iconsCache;
 
@@ -43,25 +41,6 @@ namespace VUIE
 
         static ArchitectModule()
         {
-            LongEventHandler.ExecuteWhenFinished(() =>
-            {
-                foreach (var tab in ArchitectLoadSaver.Architect.desPanelsCached) tab.def.ResolveDesignators();
-                var vanilla = ArchitectLoadSaver.SaveState("VUIE.Vanilla".Translate(), true);
-                var me = UIMod.GetModule<ArchitectModule>();
-                me.SavedStates ??= new List<ArchitectSaved>();
-                if (me.VanillaIndex >= 0)
-                    me.SavedStates[me.VanillaIndex] = vanilla;
-                else
-                {
-                    me.VanillaIndex = me.SavedStates.Count;
-                    me.SavedStates.Add(vanilla);
-                }
-
-                if (me.ActiveIndex < 0) me.ActiveIndex = me.VanillaIndex;
-                if (me.ActiveIndex == me.VanillaIndex) return;
-                ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex]);
-                DoDesInit = false;
-            });
             var type = AccessTools.TypeByName("ArchitectIcons.ArchitectIconsMod");
             MethodInfo method = null;
             if (type is not null) method = AccessTools.Method(type, "DoArchitectButton");
@@ -238,6 +217,27 @@ namespace VUIE
                 yield return tex;
         }
 
+        public override void LateInit()
+        {
+            base.LateInit();
+            LongEventHandler.ExecuteWhenFinished(() =>
+            {
+                foreach (var tab in ArchitectLoadSaver.Architect.desPanelsCached) tab.def.ResolveDesignators();
+                var vanilla = ArchitectLoadSaver.SaveState("VUIE.Vanilla".Translate(), true);
+                var me = UIMod.GetModule<ArchitectModule>();
+                me.SavedStates ??= new List<ArchitectSaved>();
+                if (me.VanillaIndex >= 0)
+                    me.SavedStates[me.VanillaIndex] = vanilla;
+                else
+                {
+                    me.VanillaIndex = me.SavedStates.Count;
+                    me.SavedStates.Add(vanilla);
+                }
+
+                if (me.ActiveIndex < 0) me.ActiveIndex = me.VanillaIndex;
+            });
+        }
+
         public override void DoPatches(Harmony harm)
         {
             harm.Patch(AccessTools.Method(typeof(ArchitectCategoryTab), nameof(ArchitectCategoryTab.DesignationTabOnGUI)),
@@ -246,11 +246,28 @@ namespace VUIE
             harm.Patch(AccessTools.Method(typeof(ArchitectCategoryTab), "CacheSearchState"), postfix: new HarmonyMethod(typeof(ArchitectModule), nameof(FixUnique)));
             harm.Patch(AccessTools.Method(typeof(GizmoGridDrawer), nameof(GizmoGridDrawer.DrawGizmoGrid)),
                 postfix: new HarmonyMethod(typeof(ArchitectModule), nameof(OverrideMouseOverGizmo)));
-            harm.Patch(AccessTools.Method(typeof(DesignationCategoryDef), nameof(DesignationCategoryDef.ResolveDesignators)),
-                new HarmonyMethod(typeof(ArchitectModule), nameof(SkipDesInit)), new HarmonyMethod(typeof(ArchitectModule), nameof(FixDesig)));
+            harm.Patch(AccessTools.Method(typeof(MainTabWindow_Architect), nameof(MainTabWindow_Architect.CacheDesPanels)),
+                postfix: new HarmonyMethod(typeof(ArchitectModule), nameof(FixDesPanels)));
+            harm.Patch(AccessTools.Method(typeof(BuildCopyCommandUtility), nameof(BuildCopyCommandUtility.FindAllowedDesignatorRecursive)),
+                postfix: new HarmonyMethod(typeof(ArchitectModule), nameof(FindAllowedDesignatorInGroup)));
         }
 
-        public static bool SkipDesInit() => DoDesInit;
+        public static void FindAllowedDesignatorInGroup(Designator designator, BuildableDef buildable, bool mustBeVisible, ref Designator_Build __result)
+        {
+            if (__result != null || designator is not Designator_Group {Elements: var elements}) return;
+            foreach (var element in elements)
+                if (BuildCopyCommandUtility.FindAllowedDesignatorRecursive(element, buildable, mustBeVisible) is { } found)
+                {
+                    __result = found;
+                    return;
+                }
+        }
+
+        public static void FixDesPanels(MainTabWindow_Architect __instance)
+        {
+            var me = UIMod.GetModule<ArchitectModule>();
+            if (me.ActiveIndex != me.VanillaIndex) ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex], __instance);
+        }
 
         public static void OverrideMouseOverGizmo(ref Gizmo mouseoverGizmo)
         {

@@ -27,6 +27,13 @@ namespace VUIE
             listing.Begin(viewRect);
             listing.CheckboxLabeled("VUIE.Overlays.Move".Translate(), ref MoveOverlays);
             listing.GapLine();
+            var rect = listing.GetRect(30f);
+            if (Widgets.ButtonText(rect.LeftHalf(), "VUIE.Overlays.EnableAll".Translate()))
+                foreach (var def in DefDatabase<OverlayDef>.AllDefs)
+                    def.Worker.Enable();
+            if (Widgets.ButtonText(rect.RightHalf(), "VUIE.Overlays.DisabledAll".Translate()))
+                foreach (var def in DefDatabase<OverlayDef>.AllDefs)
+                    def.Worker.Disable();
             foreach (var def in DefDatabase<OverlayDef>.AllDefs)
             {
                 if (!labelCache.TryGetValue(def, out var label))
@@ -54,11 +61,22 @@ namespace VUIE
             if (LongEventHandler.currentEvent != null)
                 LongEventHandler.ExecuteWhenFinished(() => UIDefOf.VUIE_Overlays.buttonVisible = MoveOverlays);
             else UIDefOf.VUIE_Overlays.buttonVisible = MoveOverlays;
-            foreach (var def in DefDatabase<OverlayDef>.AllDefs)
+            if (Scribe.mode == LoadSaveMode.LoadingVars && !Scribe.EnterNode("overlays"))
+                foreach (var def in DefDatabase<OverlayDef>.AllDefs)
+                {
+                    Scribe.EnterNode("overlayWorker_" + def.defName);
+                    def.Worker.ExposeData();
+                    Scribe.ExitNode();
+                }
+            else
             {
-                Scribe.EnterNode("overlayWorker_" + def.defName);
-                if (!def.Worker.DrawToggle) def.Worker.Visible = false;
-                def.Worker.ExposeData();
+                foreach (var def in DefDatabase<OverlayDef>.AllDefs)
+                {
+                    Scribe.EnterNode(def.defName);
+                    def.Worker.ExposeData();
+                    Scribe.ExitNode();
+                }
+
                 Scribe.ExitNode();
             }
         }

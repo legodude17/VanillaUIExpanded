@@ -6,7 +6,6 @@ using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
-using VFECore.UItils;
 
 namespace VUIE
 {
@@ -129,13 +128,17 @@ namespace VUIE
             var selectedRect = gizmoRect.BottomHalf().ContractedBy(12f);
             gizmoRect = gizmoRect.TopHalf().ContractedBy(12f);
             selectedRect.yMax -= 50f;
+            selectedRect.yMin += 12f;
+            var controlsRect = gizmoRect;
+            controlsRect.height = 40f;
+            controlsRect.y += gizmoRect.height + 5f;
+            var labelRect = controlsRect.RightHalf();
+            controlsRect = controlsRect.LeftHalf();
 
             if (selectedCategoryTab != null)
             {
                 var flag = false;
-                var controlsRect = gizmoRect.LeftHalf();
-                controlsRect.height = 40f;
-                controlsRect.y += gizmoRect.height + 5f;
+                Widgets.Label(controlsRect.RightHalf(), selectedCategoryTab.def.LabelCap + " ^");
                 Widgets.DrawMenuSection(gizmoRect);
                 var gizmos = selectedCategoryTab.def.AllResolvedDesignators.Cast<Gizmo>().ToList();
                 Placeholder placeholder = null;
@@ -155,7 +158,7 @@ namespace VUIE
                     }
                 }
 
-                GizmoDrawer.DrawGizmosWithPages(gizmos, ref curPageMain, gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x * 3), controlsRect, false, (giz, _) =>
+                GizmoDrawer.DrawGizmosWithPages(gizmos, ref curPageMain, gizmoRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x * 3), controlsRect.LeftHalf(), false, (giz, _) =>
                 {
                     if (Event.current.shift)
                     {
@@ -208,13 +211,11 @@ namespace VUIE
                     });
             }
 
-            var labelRect = selectedRect.TakeTopPart(40f).RightHalf();
             Widgets.DrawMenuSection(selectedRect);
 
             if (selected != null)
             {
                 Widgets.Label(labelRect.LeftHalf(), selected.Label + " V");
-                selectedRect.yMin += 45f;
                 var children = selected switch
                 {
                     Designator_Group group => group.Elements,
@@ -223,12 +224,12 @@ namespace VUIE
                 };
                 if (children != null)
                 {
-                    GizmoDrawer.DrawGizmosWithPages(children, ref curPageGroup, selectedRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), labelRect.RightHalf(), false,
+                    GizmoDrawer.DrawGizmosWithPages(children, ref curPageGroup, selectedRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x * 3), labelRect.RightHalf(), false,
                         (giz, topLeft) => true, useHotkeys: false,
                         drawExtras: (gizmo, rect) =>
                         {
                             if (desDragDropManager.TryStartDrag(gizmo as Designator, rect)) children.Remove(gizmo as Designator);
-                        });
+                        }, additionalSpacing: AdditionalSpacing);
                     desDragDropManager.DropLocation(selectedRect, _ => Widgets.DrawHighlight(selectedRect), des =>
                     {
                         children.Add(des);

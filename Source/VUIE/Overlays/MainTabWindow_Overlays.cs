@@ -54,10 +54,10 @@ namespace VUIE
         public static void DoOverlayToggles(WidgetRow row)
         {
             foreach (var overlayDef in DefDatabase<OverlayDef>.AllDefs)
-            {
-                if (!overlayDef.Worker.DrawToggle) continue;
-                overlayDef.Worker.DoInterface(row);
-            }
+                if (overlayDef.Worker.DrawToggle)
+                    overlayDef.Worker.DoInterface(row);
+                else if (overlayDef.Worker.Visible)
+                    overlayDef.Worker.Visible = false;
         }
     }
 }

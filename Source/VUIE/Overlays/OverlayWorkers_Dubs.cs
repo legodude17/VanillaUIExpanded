@@ -32,9 +32,12 @@ namespace VUIE
             }
         }
 
+        private Type SaveType => typeof(OverlayWorker_DubsPipes).AllLeafSubclasses().FirstOrDefault();
+
         public override void ExposeData()
         {
             base.ExposeData();
+            if (GetType() != SaveType) return;
             Scribe_Collections.Look(ref PipeTypesActive, "pipeTypes", LookMode.Value, LookMode.Deep);
             foreach (var name in patched.Select(type => type.FullName).Except(PipeTypesActive.Keys))
                 PipeTypesActive.Add(name, new ActiveTypes {Active = new Dictionary<int, bool>()});

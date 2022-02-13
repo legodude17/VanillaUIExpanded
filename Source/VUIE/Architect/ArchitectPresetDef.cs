@@ -39,9 +39,7 @@ namespace VUIE
                             label = cat.label,
                             description = cat.description
                         };
-                        ArchitectModule.DoDesInit = true;
                         def.ResolveDesignators();
-                        ArchitectModule.DoDesInit = false;
                         def.AllResolvedDesignators.Clear();
                         def.AllResolvedDesignators.AddRange(cat.Designators.Select(DesignatorSaved.Load).Where(d => d is not null));
                         DefGenerator.AddImpliedDef(def);
