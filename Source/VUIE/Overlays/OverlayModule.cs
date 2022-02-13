@@ -61,7 +61,7 @@ namespace VUIE
             if (LongEventHandler.currentEvent != null)
                 LongEventHandler.ExecuteWhenFinished(() => UIDefOf.VUIE_Overlays.buttonVisible = MoveOverlays);
             else UIDefOf.VUIE_Overlays.buttonVisible = MoveOverlays;
-            if (Scribe.mode == LoadSaveMode.LoadingVars && !Scribe.EnterNode("overlays"))
+            if (!Scribe.EnterNode("overlays") && Scribe.mode == LoadSaveMode.LoadingVars)
                 foreach (var def in DefDatabase<OverlayDef>.AllDefs)
                 {
                     Scribe.EnterNode("overlayWorker_" + def.defName);
