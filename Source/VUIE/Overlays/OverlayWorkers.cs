@@ -28,6 +28,9 @@ namespace VUIE
             Scribe_Values.Look(ref enabled, "enabled", true);
         }
 
+        public virtual void Enable() => enabled = true;
+        public virtual void Disable() => enabled = false;
+
         public virtual void DoSettings(Listing_Standard listing)
         {
             listing.CheckboxLabeled("VUIE.Enabled".Translate(), ref enabled);
@@ -152,6 +155,11 @@ namespace VUIE
 
         protected virtual void ModInit(OverlayDef def)
         {
+        }
+
+        public override void Enable()
+        {
+            if (Active) base.Enable();
         }
     }
 

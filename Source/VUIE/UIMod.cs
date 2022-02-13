@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using HarmonyLib;
 using UnityEngine;
@@ -12,15 +13,22 @@ namespace VUIE
         public static UISettings Settings;
         private static List<Module> modules;
         public static Harmony Harm;
+        public static UIMod Instance;
 
         private Module curModule;
 
         public UIMod(ModContentPack content) : base(content)
         {
+            Instance = this;
             Harm = new Harmony("vanillaexpanded.ui");
             modules = typeof(Module).AllSubclassesNonAbstract().Select(type => (Module) Activator.CreateInstance(type)).ToList();
             curModule = modules.First(mod => !mod.LabelKey.NullOrEmpty());
-            LongEventHandler.ExecuteWhenFinished(() => Settings = GetSettings<UISettings>());
+            LongEventHandler.ExecuteWhenFinished(() =>
+            {
+                Settings = GetSettings<UISettings>();
+
+                foreach (var module in modules) module.LateInit();
+            });
             foreach (var module in modules) module.DoPatches(Harm);
         }
 
@@ -47,6 +55,32 @@ namespace VUIE
             base.ExposeData();
             foreach (var module in UIMod.AllModules) module.SaveSettings();
         }
+
+        public void Read()
+        {
+            var settingsFilename = LoadedModManager.GetSettingsFilename(Mod.Content.FolderName, Mod.GetType().Name);
+            try
+            {
+                if (File.Exists(settingsFilename))
+                {
+                    Scribe.loader.InitLoading(settingsFilename);
+                    Scribe.EnterNode("ModSettings");
+                    try
+                    {
+                        ExposeData();
+                    }
+                    finally
+                    {
+                        Scribe.ExitNode();
+                        Scribe.loader.FinalizeLoading();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"Caught exception while loading mod settings data for {Mod.Content.PackageId}. Generating fresh settings. The exception was: {ex}");
+            }
+        }
     }
 
     public abstract class Module
@@ -62,5 +96,9 @@ namespace VUIE
         }
 
         public abstract void DoPatches(Harmony harm);
+
+        public virtual void LateInit()
+        {
+        }
     }
 }

@@ -17,6 +17,7 @@ namespace VUIE
 
         static CoverageOverlays()
         {
+            Log.Message("[VUIE] Creating implied overlays from coverage...");
             AddCoverer(ThingDefOf.OrbitalTradeBeacon, Building_OrbitalTradeBeacon.TradeRadius);
             AddCoverer(ThingDef.Named("SunLamp"), color: Color.green);
             AddCoverer(ThingDefOf.FirefoamPopper);
@@ -56,19 +57,23 @@ namespace VUIE
             UIMod.Harm.Patch(AccessTools.Method(typeof(Thing), nameof(Thing.SpawnSetup)), postfix: new HarmonyMethod(typeof(CoverageOverlays), nameof(BuildingCheck)));
             UIMod.Harm.Patch(AccessTools.Method(typeof(Thing), nameof(Thing.DeSpawn)), postfix: new HarmonyMethod(typeof(CoverageOverlays), nameof(BuildingCheck)));
             UIMod.Harm.Patch(AccessTools.PropertySetter(typeof(Game), nameof(Game.CurrentMap)), postfix: new HarmonyMethod(typeof(CoverageOverlays), nameof(PostMapChange)));
+
+            Log.Message("[VUIE] Reloading settings...");
+            UIMod.Settings.Read();
         }
 
         public static void BuildingCheck(Thing __instance)
         {
-            if (Find.CurrentMap == __instance.Map && CoverageOverlayDefs.TryGetValue(__instance.def, out var overlay))
+            if (Find.CurrentMap == __instance.Map && CoverageOverlayDefs.TryGetValue(__instance.def, out var overlay) && overlay.Worker.DrawToggle)
                 (overlay.Worker as OverlayWorker_Coverage)?.Notify_BuildingChanged(__instance);
-            foreach (var def in SpecialCoverageOverlays.Values.SelectMany(a => a)) (def.Worker as OverlayWorker_Coverage)?.Notify_BuildingChanged(__instance);
+            foreach (var def in SpecialCoverageOverlays.Values.SelectMany(a => a).Where(def => def.Worker.DrawToggle))
+                (def.Worker as OverlayWorker_Coverage)?.Notify_BuildingChanged(__instance);
         }
 
         public static void PostMapChange()
         {
-            foreach (var def in CoverageOverlayDefs.Values) (def.Worker as OverlayWorker_Coverage)?.Notify_ChangedMap();
-            foreach (var def in SpecialCoverageOverlays.Values.SelectMany(a => a)) (def.Worker as OverlayWorker_Coverage)?.Notify_ChangedMap();
+            foreach (var def in CoverageOverlayDefs.Values.Where(def => def.Worker.DrawToggle)) (def.Worker as OverlayWorker_Coverage)?.Notify_ChangedMap();
+            foreach (var def in SpecialCoverageOverlays.Values.SelectMany(a => a).Where(def => def.Worker.DrawToggle)) (def.Worker as OverlayWorker_Coverage)?.Notify_ChangedMap();
         }
 
         public static void AddCoverer(ThingDef def, float? radius = null, Color? color = null)
@@ -232,15 +237,19 @@ namespace VUIE
             if (ThingRelevant(t)) base.Notify_BuildingChanged(t);
         }
 
+        public override void Enable()
+        {
+            if (ModsConfig.IdeologyActive) base.Enable();
+        }
+
         private static bool ThingRelevant(Thing t) => (ThingRequestGroup.Corpse.Includes(t.def) || ThingRequestGroup.BuildingArtificial.Includes(t.def)) &&
                                                       t.GetStatValue(StatDefOf.TerrorSource) > 0;
 
         public override bool ShouldAutoShow()
         {
-            if (Find.Selector.SelectedObjects.OfType<Thing>().Any(ThingRelevant)) return true;
-            if (Find.DesignatorManager.SelectedDesignator is Designator_Place {PlacingDef: {statBases: { } stats}} &&
-                stats.Any(s => s.stat == StatDefOf.TerrorSource)) return true;
-            return false;
+            return Find.Selector.SelectedObjects.OfType<Thing>().Any(ThingRelevant) ||
+                   Find.DesignatorManager.SelectedDesignator is Designator_Place {PlacingDef: {statBases: { } stats}} &&
+                   stats.Any(s => s.stat == StatDefOf.TerrorSource);
         }
 
         public override void CacheCovered()

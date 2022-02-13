@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
 using RimWorld.Planet;
@@ -81,7 +82,22 @@ namespace VUIE
 
         public static void ConfirmAndRestart()
         {
-            Dialog_MessageBox.CreateConfirmation("VUIE.ConfirmRestart.Desc".Translate(), GenCommandLine.Restart, true, "VUIE.ConfirmRestart".Translate());
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation("VUIE.ConfirmRestart.Desc".Translate(), GenCommandLine.Restart, true, "VUIE.ConfirmRestart".Translate()));
+        }
+
+        public static void SetNextEvent(Action action, string textKey, bool doAsynchronously, Action<Exception> exceptionHandler, bool showExtraUIInfo = true)
+        {
+            var queuedLongEvent = new LongEventHandler.QueuedLongEvent
+            {
+                eventAction = action,
+                eventTextKey = textKey,
+                doAsynchronously = doAsynchronously,
+                exceptionHandler = exceptionHandler,
+                canEverUseStandardWindow = !LongEventHandler.AnyEventWhichDoesntUseStandardWindowNowOrWaiting,
+                showExtraUIInfo = showExtraUIInfo
+            };
+            var queued = LongEventHandler.eventQueue.ToArray();
+            LongEventHandler.eventQueue = new Queue<LongEventHandler.QueuedLongEvent>(queued.Prepend(queuedLongEvent));
         }
     }
 }
