@@ -266,7 +266,7 @@ namespace VUIE
         public static void FixDesPanels(MainTabWindow_Architect __instance)
         {
             var me = UIMod.GetModule<ArchitectModule>();
-            if (me.ActiveIndex != me.VanillaIndex) ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex], __instance);
+            if (me.ActiveIndex != me.VanillaIndex) LongEventHandler.ExecuteWhenFinished(() => ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex], __instance));
         }
 
         public static void OverrideMouseOverGizmo(ref Gizmo mouseoverGizmo)
