@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using RimWorld;
 using Verse;
+using UnityEngine;
 
 namespace VUIE
 {
@@ -56,6 +57,26 @@ namespace VUIE
 
     public abstract class Dialog_ArchitectList : Dialog_FileList
     {
+        public Vector2 _get_InitialSize()
+        {
+            throw new NotImplementedException("Harmony reverse-patch of Dialog_FileList.InitialSize failed.");
+        }
+
+        public override Vector2 InitialSize
+        {
+            get { return _get_InitialSize(); }
+        }
+
+        public void _DoWindowContents(Rect inRect)
+        {
+            throw new NotImplementedException("Harmony reverse-patch of Dialog_FileList.DoWindowContents failed.");
+        }
+
+        public override void DoWindowContents(Rect inRect)
+        {
+            _DoWindowContents(inRect);
+        }
+
         public override void ReloadFiles()
         {
             files.Clear();

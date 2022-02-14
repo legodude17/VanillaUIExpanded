@@ -250,6 +250,10 @@ namespace VUIE
                 postfix: new HarmonyMethod(typeof(ArchitectModule), nameof(FixDesPanels)));
             harm.Patch(AccessTools.Method(typeof(BuildCopyCommandUtility), nameof(BuildCopyCommandUtility.FindAllowedDesignatorRecursive)),
                 postfix: new HarmonyMethod(typeof(ArchitectModule), nameof(FindAllowedDesignatorInGroup)));
+            Harmony.ReversePatch(AccessTools.Method(typeof(Dialog_FileList), "get_InitialSize"),
+                new HarmonyMethod(typeof(Dialog_ArchitectList), nameof(Dialog_ArchitectList._get_InitialSize)));
+            Harmony.ReversePatch(AccessTools.Method(typeof(Dialog_FileList), nameof(Dialog_FileList.DoWindowContents)),
+                new HarmonyMethod(typeof(Dialog_ArchitectList), nameof(Dialog_ArchitectList._DoWindowContents)));
         }
 
         public static void FindAllowedDesignatorInGroup(Designator designator, BuildableDef buildable, bool mustBeVisible, ref Designator_Build __result)
