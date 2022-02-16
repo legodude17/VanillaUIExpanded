@@ -61,14 +61,7 @@ namespace VUIE
             if (LongEventHandler.currentEvent != null)
                 LongEventHandler.ExecuteWhenFinished(() => UIDefOf.VUIE_Overlays.buttonVisible = MoveOverlays);
             else UIDefOf.VUIE_Overlays.buttonVisible = MoveOverlays;
-            if (Scribe.mode == LoadSaveMode.LoadingVars && !Scribe.EnterNode("overlays"))
-                foreach (var def in DefDatabase<OverlayDef>.AllDefs)
-                {
-                    Scribe.EnterNode("overlayWorker_" + def.defName);
-                    def.Worker.ExposeData();
-                    Scribe.ExitNode();
-                }
-            else
+            if (Scribe.EnterNode("overlays"))
             {
                 foreach (var def in DefDatabase<OverlayDef>.AllDefs)
                 {
@@ -79,6 +72,13 @@ namespace VUIE
 
                 Scribe.ExitNode();
             }
+            else if (Scribe.mode == LoadSaveMode.LoadingVars)
+                foreach (var def in DefDatabase<OverlayDef>.AllDefs)
+                {
+                    Scribe.EnterNode("overlayWorker_" + def.defName);
+                    def.Worker.ExposeData();
+                    Scribe.ExitNode();
+                }
         }
 
         public override void DoPatches(Harmony harm)
