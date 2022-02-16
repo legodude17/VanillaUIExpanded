@@ -51,9 +51,12 @@ namespace VUIE
                     .Where(d => d.canGenerateDefaultDesignator && d.designationCategory != null)
                     .Select(def => new Designator_Build(def)),
                 des => (des as Designator_Build)?.PlacingDef.defName,
-                (data, type) => data is null
-                    ? null
-                    : new Designator_Build((BuildableDef) DefDatabase<ThingDef>.GetNamedSilentFail(data) ?? DefDatabase<TerrainDef>.GetNamedSilentFail(data))));
+                (data, _) =>
+                {
+                    if (data is null) return null;
+                    var def = (BuildableDef) DefDatabase<ThingDef>.GetNamedSilentFail(data) ?? DefDatabase<TerrainDef>.GetNamedSilentFail(data);
+                    return def is null ? null : new Designator_Build(def);
+                }));
             if (ModLister.HasActiveModWithName("More Planning 1.3"))
                 SpecialHandling.Add(AccessTools.TypeByName("MorePlanning.Designators.SelectColorDesignator"),
                     DesignatorTypeHandling.Create(
