@@ -21,19 +21,30 @@ namespace VUIE
             Tabs = Architect.desPanelsCached.Select(ArchitectTabSaved.Save).ToList()
         };
 
+        public static bool EnsureCached(ArchitectSaved saved)
+        {
+            Log.Message($"[VUIE] Checking cache for {saved.Name}");
+            if (CACHE.ContainsKey(saved)) return true;
+
+            if (!UnityData.IsInMainThread)
+            {
+                Log.Warning("[VUIE] Attempted to generate designators while not in the main thread!");
+                return false;
+            }
+
+            Log.Message($"[VUIE] Generating designators for: {saved.Name}");
+
+            CACHE.Add(saved, saved.Tabs.Select(tab => tab.Designators.Select(DesignatorSaved.Load).Where(d => d is not null).ToList()).ToList());
+            return true;
+        }
+
         public static void RestoreState(ArchitectSaved saved, MainTabWindow_Architect instance = null)
         {
             Log.Message("[VUIE] Restoring saved architect state: " + saved.Name);
             architect = instance;
-            if (!CACHE.TryGetValue(saved, out var tabs))
-            {
-                tabs = saved.Tabs.Select(tab => tab.Designators.Select(DesignatorSaved.Load).Where(d => d is not null).ToList()).ToList();
-                CACHE.Add(saved, tabs);
-            }
-
-
+            if (!EnsureCached(saved)) return;
             Architect.desPanelsCached.Clear();
-            foreach (var (tab, contents) in saved.Tabs.Zip(tabs, (tabSaved, list) => (tabSaved, list)))
+            foreach (var (tab, contents) in saved.Tabs.Zip(CACHE[saved], (tabSaved, list) => (tabSaved, list)))
             {
                 var def = DefDatabase<DesignationCategoryDef>.GetNamedSilentFail(tab.defName);
                 if (def is null)

@@ -235,6 +235,7 @@ namespace VUIE
                 }
 
                 if (me.ActiveIndex < 0) me.ActiveIndex = me.VanillaIndex;
+                if (me.ActiveIndex != me.VanillaIndex) ArchitectLoadSaver.EnsureCached(me.SavedStates[me.ActiveIndex]);
             });
         }
 
@@ -254,6 +255,14 @@ namespace VUIE
                 new HarmonyMethod(typeof(Dialog_ArchitectList), nameof(Dialog_ArchitectList._get_InitialSize)));
             Harmony.ReversePatch(AccessTools.Method(typeof(Dialog_FileList), nameof(Dialog_FileList.DoWindowContents)),
                 new HarmonyMethod(typeof(Dialog_ArchitectList), nameof(Dialog_ArchitectList._DoWindowContents)));
+            harm.Patch(AccessTools.Method(typeof(MapInterface), nameof(MapInterface.Notify_SwitchedMap)),
+                postfix: new HarmonyMethod(typeof(ArchitectModule), nameof(PostMapChanged)));
+        }
+
+        public static void PostMapChanged()
+        {
+            var me = UIMod.GetModule<ArchitectModule>();
+            ArchitectLoadSaver.EnsureCached(me.SavedStates[me.ActiveIndex]);
         }
 
         public static void FindAllowedDesignatorInGroup(Designator designator, BuildableDef buildable, bool mustBeVisible, ref Designator_Build __result)
