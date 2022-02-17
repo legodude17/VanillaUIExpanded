@@ -156,6 +156,8 @@ namespace VUIE
                         break;
                 }
 
+            if (des is null) return null;
+
             des.order = saved.Order;
 
             return des;
