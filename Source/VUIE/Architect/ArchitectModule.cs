@@ -30,6 +30,8 @@ namespace VUIE
         private static readonly AccessTools.FieldRef<object, List<ArchitectCategoryTab>> mintDesPanelsCached;
 
         private static readonly Dictionary<string, string> truncationCache = new();
+
+        private static bool allowVanilla = true;
         public int ActiveIndex = -1;
         private string buffer;
 
@@ -156,7 +158,7 @@ namespace VUIE
                 }
 
                 row.Gap(3f);
-                if (row.ButtonText("VUIE.Export".Translate())) Find.WindowStack.Add(new Dialog_ArchitectList_Export(state));
+                if (!state.Vanilla && row.ButtonText("VUIE.Export".Translate())) Find.WindowStack.Add(new Dialog_ArchitectList_Export(state));
             }
 
             listing.Gap(6f);
@@ -234,6 +236,8 @@ namespace VUIE
                     me.SavedStates.Add(vanilla);
                 }
 
+                allowVanilla = false;
+
                 if (me.ActiveIndex < 0) me.ActiveIndex = me.VanillaIndex;
                 if (me.ActiveIndex != me.VanillaIndex) ArchitectLoadSaver.EnsureCached(me.SavedStates[me.ActiveIndex]);
             });
@@ -261,6 +265,7 @@ namespace VUIE
 
         public static void PostMapChanged()
         {
+            if (allowVanilla) return;
             var me = UIMod.GetModule<ArchitectModule>();
             ArchitectLoadSaver.EnsureCached(me.SavedStates[me.ActiveIndex]);
         }
@@ -278,6 +283,7 @@ namespace VUIE
 
         public static void FixDesPanels(MainTabWindow_Architect __instance)
         {
+            if (allowVanilla) return;
             var me = UIMod.GetModule<ArchitectModule>();
             if (me.ActiveIndex != me.VanillaIndex) ArchitectLoadSaver.RestoreState(me.SavedStates[me.ActiveIndex], __instance);
         }
