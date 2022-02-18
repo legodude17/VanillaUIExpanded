@@ -109,7 +109,7 @@ namespace VUIE
         public static ArchitectTabSaved Save(ArchitectCategoryTab tab) => new()
         {
             label = tab.def.label,
-            defName = tab.def.LabelCap,
+            defName = tab.def.defName,
             description = tab.def.description,
             Designators = tab.def.AllResolvedDesignators.Select(DesignatorSaved.Save).ToList()
         };
