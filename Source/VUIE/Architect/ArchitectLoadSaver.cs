@@ -144,10 +144,12 @@ namespace VUIE
                 {
                     case "VUIE.Designator_Group":
                         des = new Designator_Group(saved.Elements.Select(Load).Where(d => d is not null).ToList(), saved.Name);
+                        if (!((Designator_Group) des).Elements.Any()) return null;
                         break;
                     case "RimWorld.Designator_Dropdown":
                         var dropdown = new Designator_Dropdown();
                         foreach (var designator in saved.Elements.Select(Load).Where(d => d is not null)) dropdown.Add(designator);
+                        if (dropdown.activeDesignator is null) return null;
                         des = dropdown;
                         break;
                     default:
