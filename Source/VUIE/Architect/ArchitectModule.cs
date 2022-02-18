@@ -149,7 +149,7 @@ namespace VUIE
                 row.Gap(3f);
                 if (row.ButtonText("VUIE.Remove".Translate()))
                 {
-                    if (state.Vanilla) Messages.Message("VUIE.Architect.Disabled.RemoveVanilla".Translate(), MessageTypeDefOf.RejectInput);
+                    if (state.Vanilla && SavedStates.IndexOf(state) == VanillaIndex) Messages.Message("VUIE.Architect.Disabled.RemoveVanilla".Translate(), MessageTypeDefOf.RejectInput);
                     else
                     {
                         SavedStates.Remove(state);
@@ -165,7 +165,7 @@ namespace VUIE
             var butRect = listing.GetRect(30f);
             if (Widgets.ButtonText(butRect.LeftHalf(), "VUIE.Architect.AddConfig".Translate()))
                 Dialog_TextEntry.GetString(str => AddState(ArchitectLoadSaver.SaveState(str)));
-            if (Widgets.ButtonText(butRect.RightHalf(), "VUIE.Import".Translate())) Find.WindowStack.Add(new Dialog_ArchitectList_Import(state => SavedStates.Add(state)));
+            if (Widgets.ButtonText(butRect.RightHalf(), "VUIE.Import".Translate())) Find.WindowStack.Add(new Dialog_ArchitectList_Import(state => AddState(state)));
 
             listing.End();
         }
