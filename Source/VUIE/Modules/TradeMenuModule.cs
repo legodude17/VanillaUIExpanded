@@ -69,6 +69,7 @@ namespace VUIE
 
         public static List<TransferableCountToTransferStoppingPoint> GetTradeStoppingPoints(Tradeable trad)
         {
+            if (!trad.HasAnyThing) return new List<TransferableCountToTransferStoppingPoint>();
             var currency = TradeSession.deal.CurrencyTradeable;
             var maxBuy = trad.CountToTransfer + Mathf.FloorToInt((currency.CountHeldBy(Transactor.Colony) + currency.CountToTransfer) / trad.GetPriceFor(TradeAction.PlayerBuys));
             var maxSell = trad.CountToTransfer - Mathf.FloorToInt((currency.CountHeldBy(Transactor.Trader) - currency.CountToTransfer) / trad.GetPriceFor(TradeAction.PlayerSells));
