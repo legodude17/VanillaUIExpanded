@@ -7,4 +7,6 @@
     <VUIE.History.WealthList>Wealth List</VUIE.History.WealthList>
     <VUIE.History.AllThingsWealth>Everything contributing to wealth</VUIE.History.AllThingsWealth>
     <VUIE.Refresh>Refresh</VUIE.Refresh>
+    <VUIE.Architect.ChangeDetect>Vanilla UI Expanded has detected a change in the vanilla configuration, most likely due to a change in your mod list or settings for a different mod. These changes are listed below. Your current architect configuration is {0}. Would you like to apply these changes to it?</VUIE.Architect.ChangeDetect>
+    <VUIE.Architect.MakeCopy>Make a copy with these changes.</VUIE.Architect.MakeCopy>
 </LanguageData>

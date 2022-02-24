@@ -38,7 +38,7 @@ namespace VUIE
             {
                 if (!labelCache.TryGetValue(def, out var label))
                 {
-                    label = def.Worker.Label.Replace("Toggle ", "").CapitalizeFirst().Split('\n')[0] + ":";
+                    label = def.Worker.Label.Replace("Toggle ", "").Replace(".", "").CapitalizeFirst().Split('\n')[0] + ":";
                     labelCache[def] = label;
                 }
 
@@ -65,7 +65,7 @@ namespace VUIE
             {
                 foreach (var def in DefDatabase<OverlayDef>.AllDefs)
                 {
-                    Scribe.EnterNode(def.defName);
+                    if (!Scribe.EnterNode(def.defName)) continue;
                     def.Worker.ExposeData();
                     Scribe.ExitNode();
                 }

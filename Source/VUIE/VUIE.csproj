@@ -73,12 +73,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Architect\ArchitectDiffer.cs" />
     <Compile Include="Architect\ArchitectExportImport.cs" />
     <Compile Include="Architect\ArchitectLoadSaver.cs" />
     <Compile Include="Architect\ArchitectModule.cs" />
     <Compile Include="Architect\ArchitectPresetDef.cs" />
     <Compile Include="Architect\BuildableGroupDef.cs" />
     <Compile Include="Architect\CommandGroup.cs" />
+    <Compile Include="Architect\Dialog_ArchitectDiff.cs" />
     <Compile Include="Modules\ModCompatModule.cs" />
     <Compile Include="Utils\DragDropManager.cs" />
     <Compile Include="Overlays\CoverageOverlays.cs" />

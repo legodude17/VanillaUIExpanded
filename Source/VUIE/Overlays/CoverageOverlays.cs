@@ -46,10 +46,12 @@ namespace VUIE
                     },
                     Icon = coverer.Key.uiIcon
                 };
+                if (coverer.Key.defName == "SunLamp") def.autoshowOn.Add("VPE_GasSunLamp");
                 def.Worker.Init(def);
                 CoverageOverlayDefs.Add(coverer.Key, def);
                 DefGenerator.AddImpliedDef(def);
             }
+
 
             foreach (var type in typeof(OverlayWorker_Coverage).AllSubclassesNonAbstract())
                 SpecialCoverageOverlays.Add(type, DefDatabase<OverlayDef>.AllDefs.Where(def => type.IsInstanceOfType(def.Worker)).ToList());

@@ -47,6 +47,8 @@
     <VUIE.Architect.Disabled.NotPlaying>Architect Configuration Disabled: Must be in-game to edit.</VUIE.Architect.Disabled.NotPlaying>
     <VUIE.Architect.Disabled.Vanilla>Architect Configuration Disabled: Cannot edit the vanilla configuration.</VUIE.Architect.Disabled.Vanilla>
     <VUIE.Architect.Disabled.RemoveVanilla>Cannot remove vanilla configuration.</VUIE.Architect.Disabled.RemoveVanilla>
+    <VUIE.Architect.Gather>Gather Unassigned</VUIE.Architect.Gather>
+    <VUIE.Architect.Gather.Desc>Find all designators that are not present in the current configuration and add them here.</VUIE.Architect.Gather.Desc>
     <VUIE.MainButtons>Bottom Buttons</VUIE.MainButtons>
     <VUIE.MainButtons.Reset>Reset bottom buttons to vanilla</VUIE.MainButtons.Reset>
     <VUIE.ConfirmRestart.Desc>This action requires a restart of the game. Restart now?</VUIE.ConfirmRestart.Desc>

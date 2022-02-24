@@ -163,7 +163,14 @@
         <label>toggle oil grid</label>
         <description>.</description>
         <iconPath>UI/PlaySettings/OilGrid</iconPath>
-        <workerClass>VUIE.OverlayWorker_OilGrid</workerClass>
+        <workerClass>VUIE.OverlayWorker_OilGrid_Normal</workerClass>
+    </VUIE.OverlayDef>
+    <VUIE.OverlayDef>
+        <defName>DeepOilGrid</defName>
+        <label>toggle deep oil grid</label>
+        <description>.</description>
+        <iconPath>UI/PlaySettings/OilGrid</iconPath>
+        <workerClass>VUIE.OverlayWorker_OilGrid_Deep</workerClass>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>WaterGrid</defName>

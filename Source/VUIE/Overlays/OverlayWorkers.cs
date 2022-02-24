@@ -19,6 +19,7 @@ namespace VUIE
         public virtual string Description => def.description == "." ? "" : def.description;
         public virtual float SettingsHeight => 66f;
         public virtual bool EnabledByDefault => true;
+        public virtual bool CanDisabled => true;
 
         public virtual void ExposeData()
         {
@@ -33,7 +34,7 @@ namespace VUIE
 
         public virtual void DoSettings(Listing_Standard listing)
         {
-            listing.CheckboxLabeled("VUIE.Enabled".Translate(), ref enabled);
+            if (CanDisabled) listing.CheckboxLabeled("VUIE.Enabled".Translate(), ref enabled);
         }
 
         public virtual void DoInterface(WidgetRow row)
@@ -63,6 +64,8 @@ namespace VUIE
     {
         protected override string ModName => "TD_EnhancementPack-1.3_Fork";
 
+        public override bool CanDisabled => false;
+
         public override OverlayWorker Init(OverlayDef def)
         {
             base.Init(def);
@@ -87,6 +90,8 @@ namespace VUIE
 
         public override string Label => "ShowRoofOverlayToggleButton".Translate();
 
+        public override bool CanDisabled => false;
+
         public override void ExposeData()
         {
             if (Current.Game != null)
@@ -105,6 +110,8 @@ namespace VUIE
         public override bool CanShowNumbers => false;
         public override string Label => "ShowFertilityOverlayToggleButton".Translate();
 
+        public override bool CanDisabled => false;
+
         public override void ExposeData()
         {
             if (Current.Game != null)
@@ -121,6 +128,8 @@ namespace VUIE
         }
 
         public override string Label => "ShowTerrainAffordanceOverlayToggleButton".Translate();
+
+        public override bool CanDisabled => false;
 
         public override void ExposeData()
         {

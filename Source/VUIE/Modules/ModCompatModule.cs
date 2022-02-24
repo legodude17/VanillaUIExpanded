@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using MonoMod.Utils;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -18,6 +19,11 @@ namespace VUIE
         private static string searchTerm = "";
         private static bool tdIntegration = true;
         private static bool oldTdIntegration = true;
+
+        private static Action rebindContextMenus;
+
+
+        private static AccessTools.FieldRef<object, List<ArchitectCategoryTab>> mintDesPanelsCached;
 
         public override string LabelKey => "VUIE.ModCompat";
 
@@ -88,11 +94,31 @@ namespace VUIE
             if (ModLister.HasActiveModWithName("HugsLib"))
             {
                 Log.Message("[VUIE] HugsLib detected, activating compatibility patch...");
+                harm.Patch(AccessTools.Method(AccessTools.TypeByName("HugsLib.HugsLibController"), "LoadReloadInitialize"),
+                    postfix: new HarmonyMethod(GetType(), nameof(HugsLibInit)));
+                UIMod.DoLateInit = false;
                 harm.Patch(AccessTools.Method(AccessTools.TypeByName("HugsLib.Settings.Dialog_ModSettings"), "DoWindowContents"),
                     transpiler: new HarmonyMethod(GetType(), nameof(AddSearchBoxToModSettings)));
             }
 
-            if (ArchitectModule.MintCompat) Log.Message("[VUIE] Dubs Mint Menus detected, activating compatibility patch...");
+            var type = AccessTools.TypeByName("DubsMintMenus.MainTabWindow_MintArchitect");
+            if (type is not null)
+            {
+                mintDesPanelsCached = AccessTools.FieldRefAccess<List<ArchitectCategoryTab>>(type, "desPanelsCached");
+                Log.Message("[VUIE] Dubs Mint Menus detected, activating compatibility patch...");
+            }
+
+            type = AccessTools.TypeByName("AllowTool.Context.DesignatorContextMenuController");
+            if (type is not null)
+            {
+                rebindContextMenus = AccessTools.Method(type, "RebindAllContextMenus").CreateDelegate<Action>();
+                Log.Message("[VUIE] Allow Tool detected, activating compatibility patch...");
+            }
+        }
+
+        public static void HugsLibInit()
+        {
+            UIMod.Instance.LateInit();
         }
 
         public static Exception GroupsWithFinalizer(Exception __exception, ref bool __result)
@@ -100,6 +126,13 @@ namespace VUIE
             if (__exception is not NullReferenceException) return __exception;
             __result = false;
             return null;
+        }
+
+        public static void Notify_ArchitectChanged()
+        {
+            if (mintDesPanelsCached is not null)
+                mintDesPanelsCached.Invoke(DefDatabase<MainButtonDef>.GetNamedSilentFail("MintMenus").TabWindow) = null;
+            rebindContextMenus?.Invoke();
         }
 
         public static IEnumerable<CodeInstruction> AddSearchBoxToModSettings(IEnumerable<CodeInstruction> instructions)

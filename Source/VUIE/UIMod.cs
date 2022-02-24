@@ -14,7 +14,9 @@ namespace VUIE
         private static List<Module> modules;
         public static Harmony Harm;
         public static UIMod Instance;
+        public static List<Window> StartingWindows = new();
 
+        public static bool DoLateInit = true;
         private Module curModule;
 
         public UIMod(ModContentPack content) : base(content)
@@ -26,13 +28,27 @@ namespace VUIE
             LongEventHandler.ExecuteWhenFinished(() =>
             {
                 Settings = GetSettings<UISettings>();
-
-                foreach (var module in modules) module.LateInit();
+                if (DoLateInit) LateInit();
             });
             foreach (var module in modules) module.DoPatches(Harm);
+            Harm.Patch(AccessTools.Method(typeof(UIRoot_Entry), nameof(UIRoot_Entry.Init)), postfix: new HarmonyMethod(GetType(), nameof(DoStartingWindows)));
         }
 
         public static IEnumerable<Module> AllModules => modules;
+
+        public static void DisplayWindow(Window window)
+        {
+            if (Find.WindowStack is null)
+                StartingWindows.Add(window);
+            else
+                Find.WindowStack.Add(window);
+        }
+
+        public void LateInit()
+        {
+            Log.Message("[VUIE] Initializing...");
+            foreach (var module in modules) module.LateInit();
+        }
 
         public static T GetModule<T>() where T : Module => modules.OfType<T>().First();
 
@@ -45,6 +61,13 @@ namespace VUIE
             TabDrawer.DrawTabs(inRect,
                 modules.Where(mod => !mod.LabelKey.NullOrEmpty()).Select(mod => new TabRecord(mod.LabelKey.Translate(), () => curModule = mod, curModule == mod)).ToList());
             if (!curModule.LabelKey.NullOrEmpty()) curModule.DoSettingsWindowContents(inRect);
+        }
+
+        public static void DoStartingWindows()
+        {
+            foreach (var window in StartingWindows) Find.WindowStack.Add(window);
+
+            StartingWindows.Clear();
         }
     }
 

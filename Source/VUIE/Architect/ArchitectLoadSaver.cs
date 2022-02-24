@@ -70,7 +70,7 @@ namespace VUIE
 
             architect = null;
 
-            if (ArchitectModule.MintCompat) ArchitectModule.MintRefresh();
+            ModCompatModule.Notify_ArchitectChanged();
         }
     }
 
@@ -135,6 +135,12 @@ namespace VUIE
         public static Designator Load(DesignatorSaved saved)
         {
             Designator des;
+            if (saved.Type is null)
+            {
+                Log.Warning($"Found null type in DesignatorSaved {saved.Name} {saved.AdditionalData}");
+                return null;
+            }
+
             var type = AccessTools.TypeByName(saved.Type);
             if (type is null) return null;
             if (Dialog_ConfigureArchitect.SpecialHandling.ContainsKey(type))
@@ -189,5 +195,15 @@ namespace VUIE
 
             return saved;
         }
+
+        public Diff ToDiff(DiffType type) =>
+            new()
+            {
+                label = Name,
+                className = Type,
+                defName = AdditionalData,
+                type = type,
+                children = Elements?.Select(des2 => des2.ToDiff(type)).ToList() ?? new List<Diff>()
+            };
     }
 }

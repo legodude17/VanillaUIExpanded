@@ -14,11 +14,12 @@ namespace VUIE
         public static void DrawGizmosWithPages(IEnumerable<Gizmo> gizmos, ref int curPage, Rect gizmosRect, Rect controlsRect, bool forceShrunk = false,
             Func<Gizmo, Vector2, bool> onClicked = null,
             Action<Gizmo> onMouseOver = null, bool useHotkeys = true, Action<Gizmo, Rect> drawExtras = null, QuickSearchWidget searchWidget = null, bool jump = false,
-            Vector2 additionalSpacing = default, bool sort = true)
+            Vector2 additionalSpacing = default, bool sort = true, BoolHolder hideSearch = null)
         {
+            if ((hideSearch?.Value ?? false) && searchWidget is not null && searchWidget.filter.Active) gizmos = gizmos.Where(gizmo => Matches(searchWidget.filter, gizmo));
             var groups = SplitIntoGroups(gizmos.ToList(), gizmosRect, forceShrunk);
             curPage = Mathf.Clamp(curPage, 0, groups.Count - 1);
-            DoPageControls(ref curPage, groups.Count, controlsRect, searchWidget, gizmosRect);
+            DoPageControls(ref curPage, groups.Count, controlsRect, searchWidget, gizmosRect, hideSearch);
             if (searchWidget?.filter is {Active: true} && !groups[curPage].Any(gizmo => Matches(searchWidget.filter, gizmo)) && jump)
             {
                 var idx = groups.FindIndex(group => group.Any(gizmo => Matches(searchWidget.filter, gizmo)));
@@ -33,7 +34,7 @@ namespace VUIE
 
         private static bool Matches(QuickSearchFilter filter, Gizmo gizmo) => gizmo is Command c && filter is {Active: true} && filter.Matches(c.Label);
 
-        private static void DoPageControls(ref int curPage, int pages, Rect inRect, QuickSearchWidget searchWidget, Rect? checkForMouseOver = null)
+        private static void DoPageControls(ref int curPage, int pages, Rect inRect, QuickSearchWidget searchWidget, Rect? checkForMouseOver = null, BoolHolder hideSearch = null)
         {
             var row = new WidgetRow(inRect.x, inRect.y, UIDirection.RightThenDown);
             var width = Mathf.Min(200f, inRect.width - 136f);
@@ -47,6 +48,7 @@ namespace VUIE
                 var rect = new Rect(row.LeftX(width), row.curY, width, inRect.height);
                 row.IncrementPosition(width);
                 searchWidget.OnGUI(rect);
+                if (hideSearch is not null) row.ToggleableIcon(ref hideSearch.Value, TexButton.Search, "Hide unmatching gizmos");
             }
 
             row.Gap(12f);
@@ -375,6 +377,11 @@ namespace VUIE
                 curLoc.y = rect.yMin;
                 if (i < columns - 1) Widgets.DrawLine(new Vector2(curLoc.x, curLoc.y + 2f), new Vector2(curLoc.x, rect.yMax), color, 1f);
             }
+        }
+
+        public class BoolHolder
+        {
+            public bool Value;
         }
 
         public class State

@@ -6,6 +6,7 @@ using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using VFECore.UItils;
 
 namespace VUIE
 {
@@ -20,14 +21,17 @@ namespace VUIE
 
         public static Dictionary<Type, DesignatorTypeHandling> SpecialHandling = new();
 
-        private static readonly List<Designator> available = new();
+        private static readonly List<Designator> unassigned = new();
+
+        private readonly List<Designator> available = new();
         private readonly QuickSearchWidget availableSearch = new();
         private readonly DragDropManager<Designator> desDragDropManager = new((des, topLeft) => des.GizmoOnGUI(topLeft, Gizmo.Height, new GizmoRenderParms()));
+
+        private readonly GizmoDrawer.BoolHolder hideAvailableSearch = new();
 
         private readonly DragDropManager<ArchitectCategoryTab> tabDragDropManager = new((tab, topLeft) =>
             Widgets.ButtonTextSubtle(new Rect(topLeft, new Vector2(100f, 33f)), tab.def.LabelCap, 0f, 8f, null, new Vector2(-1f, -1f)));
 
-        private readonly List<Designator> unassigned = new();
         private int curAvailablePage;
         private int curPageGroup;
 
@@ -35,10 +39,12 @@ namespace VUIE
 
         private int curUnassignedPage;
 
+        private readonly bool godMode;
+
+        private bool jump;
+
         private Designator selected;
         private ArchitectCategoryTab selectedCategoryTab;
-
-        private bool setPageWhileSearching;
 
         private Vector2 tabListScrollPos = Vector2.zero;
         private int tabMouseoverIdx = -1;
@@ -81,6 +87,8 @@ namespace VUIE
         {
             doCloseButton = true;
             doCloseX = false;
+            godMode = DebugSettings.godMode;
+            DebugSettings.godMode = true;
             foreach (var type in typeof(Designator).AllSubclassesNonAbstract()
                 .Where(type => !typeof(Designator_Install).IsAssignableFrom(type) && !IgnoreDesignatorTypes.Contains(type) && (SpecialHandling.ContainsKey(type) ||
                     type.GetConstructors().Any(m => m.GetParameters().Length == 0))))
@@ -117,7 +125,8 @@ namespace VUIE
             var module = UIMod.GetModule<ArchitectModule>();
             module.SavedStates[module.ActiveIndex] = ArchitectLoadSaver.SaveState(module.SavedStates[module.ActiveIndex].Name);
 
-            if (ArchitectModule.MintCompat) ArchitectModule.MintRefresh();
+            ModCompatModule.Notify_ArchitectChanged();
+            DebugSettings.godMode = godMode;
         }
 
         public override void DoWindowContents(Rect inRect)
@@ -251,7 +260,7 @@ namespace VUIE
             var controlsRect = inRect.TopPartPixels(35f);
             inRect.yMin += 40f;
             Widgets.DrawMenuSection(inRect);
-            if (!availableSearch.filter.Active) setPageWhileSearching = false;
+            if (availableSearch.CurrentlyFocused()) jump = true;
             var oldPage = curAvailablePage;
             GizmoDrawer.DrawGizmosWithPages(available, ref curAvailablePage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) =>
                 {
@@ -261,18 +270,32 @@ namespace VUIE
                 drawExtras: (giz, rect) =>
                 {
                     if (giz is Designator des && desDragDropManager.TryStartDrag(des, rect)) available[available.IndexOf(des)] = Clone(des);
-                }, useHotkeys: false, searchWidget: availableSearch, jump: !setPageWhileSearching);
-            if (oldPage != curAvailablePage && availableSearch.filter.Active) setPageWhileSearching = true;
+                }, useHotkeys: false, searchWidget: availableSearch, jump: jump, hideSearch: hideAvailableSearch);
+            if (oldPage != curAvailablePage && availableSearch.CurrentlyFocused()) jump = false;
             if (desDragDropManager.DraggingNow) TooltipHandler.TipRegionByKey(inRect, "VUIE.Architect.DropDelete");
             desDragDropManager.DropLocation(inRect, _ => Widgets.DrawHighlight(inRect), _ => true);
         }
 
         public static Designator Clone(Designator des) => DesignatorSaved.Load(DesignatorSaved.Save(des));
 
+        private static IEnumerable<Designator> ExpandGroups(Designator des) => des switch
+        {
+            Designator_Dropdown dropdown => dropdown.Elements.SelectMany(ExpandGroups),
+            Designator_Group group => group.Elements.SelectMany(ExpandGroups),
+            _ => Gen.YieldSingle(des)
+        };
+
         private void DoUnassignedList(Rect inRect)
         {
-            var controlsRect = inRect.TopPartPixels(35f);
-            inRect.yMin += 40f;
+            var controlsRect = inRect.TakeTopPart(35f);
+            inRect.yMin += 5f;
+            var gatherRect = controlsRect.TakeRightPart(150f);
+            TooltipHandler.TipRegionByKey(gatherRect, "VUIE.Architect.Gather.Desc");
+            if (Widgets.ButtonText(gatherRect, "VUIE.Architect.Gather".Translate()))
+                unassigned.AddRange(available.Select(DesignatorSaved.Save)
+                    .Except(ArchitectCategoryTabs.SelectMany(tab => tab.def.resolvedDesignators.SelectMany(ExpandGroups)).Select(DesignatorSaved.Save))
+                    .Select(DesignatorSaved.Load));
+
             Widgets.DrawMenuSection(inRect);
             GizmoDrawer.DrawGizmosWithPages(unassigned, ref curUnassignedPage, inRect.ContractedBy(GizmoGridDrawer.GizmoSpacing.x), controlsRect, false, (giz, topLeft) =>
                 {

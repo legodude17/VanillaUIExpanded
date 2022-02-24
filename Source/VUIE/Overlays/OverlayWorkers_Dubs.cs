@@ -162,19 +162,22 @@ namespace VUIE
         public override int PipeType => 0;
     }
 
-    public class OverlayWorker_OilGrid : OverlayWorker_Mod
+    public abstract class OverlayWorker_OilGrid : OverlayWorker_Mod
     {
-        private FastInvokeHandler drawOilGrid;
-        private AccessTools.FieldRef<object, object> getDeepOilGrid;
-        private AccessTools.FieldRef<object, object> getOilGrid;
-        private Func<Map, MapComponent> getRimefeller;
-        private Type rimefellerMapComp;
-        private AccessTools.FieldRef<object, bool> towerDraw;
+        private static FastInvokeHandler drawOilGrid;
+        private static AccessTools.FieldRef<object, object> getDeepOilGrid;
+        private static AccessTools.FieldRef<object, object> getOilGrid;
+        private static Func<Map, MapComponent> getRimefeller;
+        private static MapComponent rimefeller;
+        private static Type rimefellerMapComp;
+        private static AccessTools.FieldRef<object, bool> towerDraw;
         protected override string ModName => "Rimefeller";
+        protected static MapComponent Rimefeller => rimefeller ??= getRimefeller(Find.CurrentMap);
 
         protected override void ModInit(OverlayDef def)
         {
             base.ModInit(def);
+            if (getRimefeller is not null) return;
             getRimefeller = AccessTools.MethodDelegate<Func<Map, MapComponent>>(AccessTools.Method(AccessTools.TypeByName("Rimefeller.DubUtils"), "Rimefeller"));
             rimefellerMapComp = AccessTools.TypeByName("Rimefeller.MapComponent_Rimefeller");
             getDeepOilGrid = AccessTools.FieldRefAccess<object>(rimefellerMapComp, "DeepOilGrid");
@@ -186,10 +189,37 @@ namespace VUIE
         public override void OverlayOnGUI()
         {
             base.OverlayOnGUI();
-            var rimefeller = getRimefeller(Find.CurrentMap);
-            towerDraw(rimefeller) = true;
-            drawOilGrid(getDeepOilGrid(rimefeller));
-            drawOilGrid(getOilGrid(rimefeller));
+            rimefeller = null;
+            towerDraw(Rimefeller) = true;
+        }
+
+        protected void DrawOilGrid()
+        {
+            drawOilGrid(getOilGrid(Rimefeller));
+        }
+
+        protected void DrawDeepOilGrid()
+        {
+            drawOilGrid(getDeepOilGrid(Rimefeller));
+        }
+    }
+
+    public class OverlayWorker_OilGrid_Normal : OverlayWorker_OilGrid
+    {
+        public override void OverlayOnGUI()
+        {
+            base.OverlayOnGUI();
+            DrawOilGrid();
+        }
+    }
+
+
+    public class OverlayWorker_OilGrid_Deep : OverlayWorker_OilGrid
+    {
+        public override void OverlayOnGUI()
+        {
+            base.OverlayOnGUI();
+            DrawDeepOilGrid();
         }
     }
 

@@ -27,7 +27,6 @@ namespace VUIE
 
         private static Dictionary<string, string> iconChanges = new();
         private static readonly Func<string, Texture2D> loadIcon;
-        private static readonly AccessTools.FieldRef<object, List<ArchitectCategoryTab>> mintDesPanelsCached;
 
         private static readonly Dictionary<string, string> truncationCache = new();
 
@@ -51,18 +50,14 @@ namespace VUIE
             if (type is not null) iconsCache = AccessTools.FieldRefAccess<Dictionary<string, Texture2D>>(type, "iconsCache");
             if (type is not null) method = AccessTools.Method(type, "FindArchitectTabCategoryIcon");
             if (method is not null) loadIcon = AccessTools.MethodDelegate<Func<string, Texture2D>>(method);
-            type = AccessTools.TypeByName("DubsMintMenus.MainTabWindow_MintArchitect");
-            if (type is not null) mintDesPanelsCached = AccessTools.FieldRefAccess<List<ArchitectCategoryTab>>(type, "desPanelsCached");
         }
 
-        public static bool MintCompat => mintDesPanelsCached is not null;
 
         public static bool IconsActive => architectIcons is not null;
 
         public static float ArchitectWidth => 100f + (architectIcons is not null ? 16f : 0f);
         public override string LabelKey => "VUIE.Architect";
 
-        public static void MintRefresh() => mintDesPanelsCached.Invoke(DefDatabase<MainButtonDef>.GetNamedSilentFail("MintMenus").TabWindow) = null;
 
         public static void SetIcon(string defName, string path)
         {
@@ -182,11 +177,13 @@ namespace VUIE
             ArchitectLoadSaver.RestoreState(SavedStates[index]);
         }
 
-        public void AddState(ArchitectSaved state)
+        public ArchitectSaved AddState(ArchitectSaved state)
         {
             var i = 1;
-            while (SavedStates.Any(s => s.Name == state.Name)) state.Name = $"Untitled {i++}";
+            var name = state.Name;
+            while (SavedStates.Any(s => s.Name == state.Name)) state.Name = $"{name} {i++}";
             SavedStates.Add(state);
+            return state;
         }
 
         public override void SaveSettings()
@@ -228,8 +225,16 @@ namespace VUIE
                 var vanilla = ArchitectLoadSaver.SaveState("VUIE.Vanilla".Translate(), true);
                 var me = UIMod.GetModule<ArchitectModule>();
                 me.SavedStates ??= new List<ArchitectSaved>();
+                var diff = new Diff
+                {
+                    label = vanilla.Name,
+                    children = new List<Diff>()
+                };
                 if (me.VanillaIndex >= 0)
+                {
+                    diff.children = ArchitectDiffer.FindDiff(me.SavedStates[me.VanillaIndex], vanilla);
                     me.SavedStates[me.VanillaIndex] = vanilla;
+                }
                 else
                 {
                     me.VanillaIndex = me.SavedStates.Count;
@@ -239,7 +244,12 @@ namespace VUIE
                 allowVanilla = false;
 
                 if (me.ActiveIndex < 0) me.ActiveIndex = me.VanillaIndex;
-                if (me.ActiveIndex != me.VanillaIndex) ArchitectLoadSaver.EnsureCached(me.SavedStates[me.ActiveIndex]);
+                if (me.ActiveIndex != me.VanillaIndex)
+                {
+                    if (diff.ChangesAnything) UIMod.DisplayWindow(new Dialog_ArchitectDiff(me, diff));
+
+                    ArchitectLoadSaver.EnsureCached(me.SavedStates[me.ActiveIndex]);
+                }
             });
         }
 
