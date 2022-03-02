@@ -42,6 +42,7 @@ namespace VUIE
                     ScribeMetaHeaderUtility.LoadGameDataHeader(ScribeMetaHeaderUtility.ScribeHeaderMode.None, true);
                     Scribe_Deep.Look(ref saved, "ArchitectTab");
                     Scribe.loader.FinalizeLoading();
+                    saved.Vanilla = false;
                     return true;
                 }
                 catch
