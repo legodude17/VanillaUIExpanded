@@ -13,6 +13,7 @@
         <description>.</description>
         <iconPath>UI/Buttons/ShowFertilityOverlay</iconPath>
         <workerClass>VUIE.OverlayWorker_Fertility</workerClass>
+        <canAutoShow>true</canAutoShow>
         <autoshowOn>
             <li>Designator_ZoneAdd_Growing</li>
         </autoshowOn>
@@ -37,6 +38,9 @@
         <description>.</description>
         <workerClass>VUIE.OverlayWorker_Gas</workerClass>
         <iconPath>ArtAssets/GasPipe_MenuIcon</iconPath>
+        <requiredMods>
+            <li>Vanilla Furniture Expanded - Power</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Sewage</defName>
@@ -44,6 +48,9 @@
         <description>.</description>
         <iconPath>DBH/UI/Plumbing</iconPath>
         <workerClass>VUIE.OverlayWorker_Sewage</workerClass>
+        <requiredMods>
+            <li>Dubs Bad Hygiene</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Air</defName>
@@ -51,6 +58,9 @@
         <description>.</description>
         <iconPath>DBH/UI/coolingPipe</iconPath>
         <workerClass>VUIE.OverlayWorker_Air</workerClass>
+        <requiredMods>
+            <li>Dubs Bad Hygiene</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Beauty</defName>
@@ -58,6 +68,12 @@
         <description>.</description>
         <iconPath>UI/Buttons/ShowBeauty</iconPath>
         <workerClass>VUIE.OverlayWorker_Beauty</workerClass>
+        <canShowGrid>true</canShowGrid>
+        <canShowNumbers>true</canShowNumbers>
+        <relevantChangeTypes>
+            <li>Buildings</li>
+            <li>Terrain</li>
+        </relevantChangeTypes>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Lighting</defName>
@@ -65,13 +81,26 @@
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_Lighting</iconPath>
         <workerClass>VUIE.OverlayWorker_Lighting</workerClass>
+        <canShowNumbers>true</canShowNumbers>
+        <canShowGrid>true</canShowGrid>
+        <canAutoShow>true</canAutoShow>
+        <relevantChangeTypes>
+            <li>GroundGlow</li>
+        </relevantChangeTypes>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>WalkSpeed</defName>
         <label>toggle walk speed overlay</label>
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_WalkSpeed</iconPath>
-        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+        <canShowGrid>true</canShowGrid>
+        <getter>VUIE.OverlayGetters:WalkSpeed</getter>
+        <relevantChangeTypes>
+            <li>Buildings</li>
+            <li>Terrain</li>
+            <li>Snow</li>
+            <li>Things</li>
+        </relevantChangeTypes>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Usage</defName>
@@ -79,35 +108,54 @@
         <description>Shows how often your pawns are in each cell. WARNING: May cause performance issues.</description>
         <iconPath>UI/PlaySettings/Button_Usage</iconPath>
         <workerClass>VUIE.OverlayWorker_Usage</workerClass>
+        <enableByDefault>false</enableByDefault>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Cleanliness</defName>
         <label>toggle cleanliness overlay</label>
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_Cleanliness</iconPath>
-        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+        <canShowGrid>true</canShowGrid>
+        <getter>VUIE.OverlayGetters:Cleanliness</getter>
+        <relevantChangeTypes>
+            <li>Terrain</li>
+            <li>Snow</li>
+            <li>Things</li>
+        </relevantChangeTypes>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>PlantGrowth</defName>
         <label>toggle plant growth overlay</label>
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_PlantGrowth</iconPath>
-        <workerClass>VUIE.OverlayWorker_Auto</workerClass>
+        <canShowGrid>true</canShowGrid>
+        <canAutoShow>true</canAutoShow>
+        <getter>VUIE.OverlayGetters:PlantGrowth</getter>
         <autoshowOn>
             <li>Designator_PlantsCut</li>
             <li>Designator_PlantsHarvest</li>
             <li>Designator_PlantsHarvestWood</li>
         </autoshowOn>
+        <relevantChangeTypes>
+            <li>Things</li>
+        </relevantChangeTypes>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Smoothable</defName>
         <label>toggle smoothable overlay</label>
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_Smoothables</iconPath>
-        <workerClass>VUIE.OverlayWorker_Auto</workerClass>
+        <workerClass>VUIE.OverlayWorker</workerClass>
+        <canShowGrid>true</canShowGrid>
+        <canAutoShow>true</canAutoShow>
+        <getter>VUIE.OverlayGetters:Smoothable</getter>
         <autoshowOn>
             <li>Designator_SmoothSurface</li>
         </autoshowOn>
+        <relevantChangeTypes>
+            <li>Buildings</li>
+            <li>Terrain</li>
+        </relevantChangeTypes>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>WindBlockers</defName>
@@ -115,6 +163,11 @@
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_WindBlockers</iconPath>
         <workerClass>VUIE.OverlayWorker_WindBlocker</workerClass>
+        <canAutoShow>true</canAutoShow>
+        <canShowGrid>true</canShowGrid>
+        <relevantChangeTypes>
+            <li>Buildings</li>
+        </relevantChangeTypes>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>HighVoltage</defName>
@@ -122,6 +175,9 @@
         <description>.</description>
         <iconPath>Rimatomics/UI/HighVoltage</iconPath>
         <workerClass>VUIE.OverlayWorker_HighVoltage</workerClass>
+        <requiredMods>
+            <li>Dubs Rimatomics</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Cooling</defName>
@@ -129,6 +185,9 @@
         <description>.</description>
         <iconPath>Rimatomics/UI/CoolingPipe</iconPath>
         <workerClass>VUIE.OverlayWorker_Cooling</workerClass>
+        <requiredMods>
+            <li>Dubs Rimatomics</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Steam</defName>
@@ -136,6 +195,9 @@
         <description>.</description>
         <iconPath>Rimatomics/UI/HeatPipe</iconPath>
         <workerClass>VUIE.OverlayWorker_Steam</workerClass>
+        <requiredMods>
+            <li>Dubs Rimatomics</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>ColdWater</defName>
@@ -143,6 +205,9 @@
         <description>.</description>
         <iconPath>Rimatomics/UI/WaterPipe</iconPath>
         <workerClass>VUIE.OverlayWorker_ColdWater</workerClass>
+        <requiredMods>
+            <li>Dubs Rimatomics</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Loom</defName>
@@ -150,6 +215,9 @@
         <description>.</description>
         <iconPath>Rimatomics/UI/Loom_Atlas</iconPath>
         <workerClass>VUIE.OverlayWorker_Loom</workerClass>
+        <requiredMods>
+            <li>Dubs Rimatomics</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>OilPipes</defName>
@@ -157,6 +225,9 @@
         <description>.</description>
         <iconPath>Rimefeller/UI/Plumbing</iconPath>
         <workerClass>VUIE.OverlayWorker_Oil</workerClass>
+        <requiredMods>
+            <li>Rimefeller</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>OilGrid</defName>
@@ -164,6 +235,9 @@
         <description>.</description>
         <iconPath>UI/PlaySettings/OilGrid</iconPath>
         <workerClass>VUIE.OverlayWorker_OilGrid_Normal</workerClass>
+        <requiredMods>
+            <li>Rimefeller</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>DeepOilGrid</defName>
@@ -171,6 +245,9 @@
         <description>.</description>
         <iconPath>UI/PlaySettings/OilGrid</iconPath>
         <workerClass>VUIE.OverlayWorker_OilGrid_Deep</workerClass>
+        <requiredMods>
+            <li>Rimefeller</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>WaterGrid</defName>
@@ -178,6 +255,9 @@
         <description>.</description>
         <iconPath>DBH/UI/waste_water</iconPath>
         <workerClass>VUIE.OverlayWorker_WaterGrid</workerClass>
+        <requiredMods>
+            <li>Dubs Bad Hygiene</li>
+        </requiredMods>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Chairs</defName>
@@ -192,20 +272,26 @@
         <description>Shows where pawns will search for a table from the selected food source.</description>
         <iconPath>UI/PlaySettings/Button_TableSearch</iconPath>
         <workerClass>VUIE.OverlayWorker_TableSearch</workerClass>
+        <canAutoShow>true</canAutoShow>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Wealth</defName>
         <label>toggle wealth overlay</label>
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_Wealth</iconPath>
-        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+        <canShowGrid>true</canShowGrid>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Health</defName>
         <label>toggle health overlay</label>
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_Health</iconPath>
-        <workerClass>VUIE.OverlayWorker_Numbers</workerClass>
+        <canShowGrid>true</canShowGrid>
+        <getter>VUIE.OverlayGetters:Health</getter>
+        <relevantChangeTypes>
+            <li>Buildings</li>
+            <li>BuildingsDamage</li>
+        </relevantChangeTypes>
     </VUIE.OverlayDef>
     <VUIE.OverlayDef>
         <defName>Terror</defName>
@@ -213,5 +299,7 @@
         <description>.</description>
         <iconPath>UI/PlaySettings/Button_Terror</iconPath>
         <workerClass>VUIE.OverlayWorker_Terror</workerClass>
+        <canShowGrid>true</canShowGrid>
+        <canAutoShow>true</canAutoShow>
     </VUIE.OverlayDef>
 </Defs>

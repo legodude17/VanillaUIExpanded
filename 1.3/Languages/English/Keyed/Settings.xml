@@ -32,12 +32,20 @@
     <VUIE.Misc.ShowImpact.Desc>In the tooltip when hovering over a pawn's capacity (breathing, moving, etc.), also show how much each item contributes to the capacity.</VUIE.Misc.ShowImpact.Desc>
     <VUIE.Overlays>Overlays</VUIE.Overlays>
     <VUIE.Enabled>Enabled at all</VUIE.Enabled>
+    <VUIE.Enabled.Desc>If false, will not show in the list of overlays, and all impact will be removed.</VUIE.Enabled.Desc>
     <VUIE.Overlays.Move>Move Overlays to new tab</VUIE.Overlays.Move>
     <VUIE.Overlays.ShowNumbers>Show numbers</VUIE.Overlays.ShowNumbers>
-    <VUIE.Overlays.ShowNumbers.Desc>If false, show colored cells like the fertility overlay. If true, show numbers near the cursor like the vanilla beauty overlay.</VUIE.Overlays.ShowNumbers.Desc>
+    <VUIE.Overlays.ShowNumbers.Desc>If true, show numbers near the cursor like the vanilla beauty overlay.</VUIE.Overlays.ShowNumbers.Desc>
     <VUIE.Overlays.UseColor>Use glow color</VUIE.Overlays.UseColor>
     <VUIE.Overlays.UseColor.Desc>If false, color will be between green and red, the brighter it is the more green.</VUIE.Overlays.UseColor.Desc>
     <VUIE.Overlays.Autoshow>Show automatically</VUIE.Overlays.Autoshow>
+    <VUIE.Overlays.Autoshow.Desc>If true, will automatically appear when certain things are selected in the Architect menu or on the map. Has a slight performance impact.</VUIE.Overlays.Autoshow.Desc>
+    <VUIE.Overlays.ShowGrid>Show grid</VUIE.Overlays.ShowGrid>
+    <VUIE.Overlays.ShowGrid.Desc>If true, show a grid of colored cells like the vanilla fertility overlay.</VUIE.Overlays.ShowGrid.Desc>
+    <VUIE.Overlays.Instancing>Allow advanced overlay drawing</VUIE.Overlays.Instancing>
+    <VUIE.Overlays.Instancing.Desc>If true, enables the advanced overlay drawing system. Disabling this may reduce performance. However, if overlays won't draw for you, disabling this may fix it. Requires a restart to take effect.</VUIE.Overlays.Instancing.Desc>
+    <VUIE.Overlays.ConstructRate>Overlay creation rate: {0}</VUIE.Overlays.ConstructRate>
+    <VUIE.Overlays.ConstructRate.Desc>Rate at which the overlay is constructed when enabled, in cells / frame. The larger, the less time it takes, but the laggier the process will be.</VUIE.Overlays.ConstructRate.Desc>
     <VUIE.Debug.Favorites>Do favorite debug actions</VUIE.Debug.Favorites>
     <VUIE.Debug.ActionMenu>Debug Action Menu</VUIE.Debug.ActionMenu>
     <VUIE.Debug.HideNotMatch>Hide items that don't match search</VUIE.Debug.HideNotMatch>

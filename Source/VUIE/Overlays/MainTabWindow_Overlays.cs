@@ -18,7 +18,7 @@ namespace VUIE
         {
             get
             {
-                var visible = DefDatabase<OverlayDef>.AllDefs.Where(d => d.Worker.DrawToggle && d.Worker.Visible).ToList();
+                var visible = DefDatabase<OverlayDef>.AllDefs.Where(d => d.Worker.Enabled && d.Worker.Visible).ToList();
                 return visible.Count == 1 ? visible[0] : null;
             }
 
@@ -31,7 +31,7 @@ namespace VUIE
         }
 
         public override float Margin => 0;
-        public override Vector2 RequestedTabSize => new(141f, Mathf.CeilToInt(DefDatabase<OverlayDef>.AllDefs.Count(d => d.Worker.DrawToggle) / 5f) * 33f);
+        public override Vector2 RequestedTabSize => new(141f, Mathf.CeilToInt(DefDatabase<OverlayDef>.AllDefs.Count(d => d.Worker.Enabled) / 5f) * 33f);
 
         public override void PostClose()
         {
@@ -54,7 +54,7 @@ namespace VUIE
         public static void DoOverlayToggles(WidgetRow row)
         {
             foreach (var overlayDef in DefDatabase<OverlayDef>.AllDefs)
-                if (overlayDef.Worker.DrawToggle)
+                if (overlayDef.Worker.Enabled)
                     overlayDef.Worker.DoInterface(row);
                 else if (overlayDef.Worker.Visible)
                     overlayDef.Worker.Visible = false;

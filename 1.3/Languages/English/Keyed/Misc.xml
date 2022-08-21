@@ -16,4 +16,5 @@
     <VUIE.UnFavorite>Remove from Favorites</VUIE.UnFavorite>
     <VUIE.Search>Search:</VUIE.Search>
     <VUIE.Architect.RestoringSettings>Restoring architect preset</VUIE.Architect.RestoringSettings>
+    <VUIE.ToggleCoverage>Toggle {0} coverage</VUIE.ToggleCoverage>
 </LanguageData>
