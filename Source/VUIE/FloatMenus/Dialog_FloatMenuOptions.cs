@@ -19,6 +19,7 @@ namespace VUIE
         public Dialog_FloatMenuOptions(IEnumerable<FloatMenuOption> opts)
         {
             options = opts.ToList();
+            layer = WindowLayer.Super;
             doCloseX = true;
             doCloseButton = false;
             closeOnClickedOutside = true;

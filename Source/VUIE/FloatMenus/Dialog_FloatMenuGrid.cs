@@ -16,6 +16,7 @@ namespace VUIE
 
         public Dialog_FloatMenuGrid(IEnumerable<FloatMenuOption> opts)
         {
+            layer = WindowLayer.Super;
             doCloseX = true;
             doCloseButton = false;
             closeOnClickedOutside = true;
