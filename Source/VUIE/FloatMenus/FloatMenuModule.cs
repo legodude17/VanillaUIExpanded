@@ -71,7 +71,7 @@ namespace VUIE
                 var res = Instance.FloatMenuSettings[key];
                 if (!res.HasValue && menu.options.Count > 30 || res.HasValue && res.Value)
                 {
-                    if (Instance.UseGrid && menu.options.Where(opt => opt.labelInt != "VUIE.FloatMenus.SwitchToFull".Translate()).All(opt => opt.shownItem is not null))
+                    if (Instance.UseGrid && menu.options.Where(opt => opt.labelInt != "VUIE.FloatMenus.SwitchToFull".Translate()).All(opt => opt.shownItem is not null && !ModCompatModule.IsSubMenuOption(opt)))
                         __instance.Add(new Dialog_FloatMenuGrid(menu.options.Where(opt => opt.labelInt != "VUIE.FloatMenus.SwitchToFull".Translate()), key));
                     else
                         __instance.Add(new Dialog_FloatMenuOptions(menu.options.Where(opt => opt.labelInt != "VUIE.FloatMenus.SwitchToFull".Translate()), key));
@@ -82,10 +82,10 @@ namespace VUIE
             return true;
         }
 
-        public static void AddSwitchOption(List<FloatMenuOption> options)
+        public static void AddSwitchOption(FloatMenu __instance, List<FloatMenuOption> options)
         {
             var key = GetKey();
-            if (Instance.ShowSwitchButtons &&
+            if (Instance.ShowSwitchButtons && !ModCompatModule.IsSubMenu(__instance) &&
                 !(Instance.FloatMenuSettings.ContainsKey(key) && Instance.FloatMenuSettings[key].HasValue && Instance.FloatMenuSettings[key].Value) &&
                 key.MethodName != "TryMakeFloatMenu")
                 options.Add(new FloatMenuOption("VUIE.FloatMenus.SwitchToFull".Translate(), () => Instance.FloatMenuSettings[key] = true));

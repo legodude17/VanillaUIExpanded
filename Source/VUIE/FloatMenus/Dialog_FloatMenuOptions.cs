@@ -11,10 +11,13 @@ namespace VUIE
     public class Dialog_FloatMenuOptions : Window
     {
         private readonly HashSet<FloatMenuOption> dontShowItem = new();
+        private readonly HashSet<FloatMenuOption> closedSubMenus = new();
         protected readonly List<FloatMenuOption> options;
         private readonly FloatMenuModule.CallInfo source;
         private Vector2 scrollPosition = new(0, 0);
         private string searchText = "";
+
+        private static readonly Color arrowColor = new Color(0.6f, 0.6f, 0.6f);
 
         public Dialog_FloatMenuOptions(IEnumerable<FloatMenuOption> opts)
         {
@@ -46,6 +49,28 @@ namespace VUIE
 
         public override Vector2 InitialSize => new(620f, 500f);
 
+        private List<(FloatMenuOption opt, int indent)> ShownOptions() {
+            var shown = new List<(FloatMenuOption opt, int indent)>();
+            BuildShownOptions(shown, options, false, 0);
+            return shown;
+        }
+
+        private void BuildShownOptions(List<(FloatMenuOption opt, int indent)> shown, List<FloatMenuOption> options, bool noFilter, int indent) {
+            foreach (var opt in options) {
+                bool match = noFilter || opt.Label.ToLower().Contains(searchText.ToLower());
+                if (ModCompatModule.IsSubMenuOption(opt) && !closedSubMenus.Contains(opt)) {
+                    shown.Add((opt, indent));
+                    int n = shown.Count;
+                    BuildShownOptions(shown, ModCompatModule.SubMenuOptions(opt), match, indent + 1);
+                    if (n == shown.Count) {
+                        shown.RemoveAt(n - 1);
+                    }
+                } else if (match) {
+                    shown.Add((opt, indent));
+                }
+            }
+        }
+
         public override void DoWindowContents(Rect inRect)
         {
             Text.Font = GameFont.Small;
@@ -53,28 +78,46 @@ namespace VUIE
             outRect.yMin += 20f;
             outRect.yMax -= 60f;
             outRect.width -= 16f;
-            searchText = Widgets.TextField(outRect.TopPartPixels(35f), searchText);
+            var searchRect = outRect.TopPartPixels(35f);
+            searchRect.xMin += 12f;
+            searchText = Widgets.TextField(searchRect, searchText);
             outRect.yMin += 40f;
-            var shownOptions = options.Where(opt => opt.Label.ToLower().Contains(searchText.ToLower())).ToList();
-            var viewRect = new Rect(0f, 0f, outRect.width - 16f, shownOptions.Sum(opt => opt.RequiredHeight + 17f));
+            var shownOptions = ShownOptions();
+            var viewRect = new Rect(0f, 0f, outRect.width - 16f, shownOptions.Sum(so => so.opt.RequiredHeight + 17f));
             Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
             try
             {
                 var y = 0f;
-                foreach (var opt in shownOptions)
+                foreach (var (opt, indent) in shownOptions)
                 {
                     var height = opt.RequiredHeight + 10f;
-                    var rect2 = new Rect(0f, y, viewRect.width - 7f, height);
+                    var rect2 = new Rect(12f, y, viewRect.width - 7f - 12f, height);
+                    rect2.xMin += indent * 18f;
                     if (opt.shownItem is not null && !dontShowItem.Contains(opt))
                     {
                         rect2.xMax -= Widgets.InfoCardButtonSize + 7f;
                         Widgets.InfoCardButton(rect2.xMax + 7f, rect2.y / 2 - Widgets.InfoCardButtonSize / 2, opt.shownItem);
                     }
 
+                    bool isSubMenu = ModCompatModule.IsSubMenuOption(opt);
+                    if (isSubMenu) {
+                        Text.Anchor = TextAnchor.MiddleLeft;
+                        GUI.color = arrowColor;
+                        var arrowRect = new Rect(rect2.x - 12f, rect2.y, 12f, rect2.height);
+                        var arrowText = closedSubMenus.Contains(opt) ? ">" : "v";
+                        Widgets.Label(arrowRect, arrowText);
+                        GUI.color = Color.white;
+                    }
+
                     if (opt.DoGUI(rect2, false, null))
                     {
-                        Close();
-                        break;
+                        if (isSubMenu) {
+                            if (closedSubMenus.Contains(opt)) closedSubMenus.Remove(opt);
+                            else closedSubMenus.Add(opt);
+                        } else {
+                            Close();
+                            break;
+                        }
                     }
 
                     GUI.color = Color.white;
