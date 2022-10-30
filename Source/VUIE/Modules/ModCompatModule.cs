@@ -27,6 +27,12 @@ namespace VUIE
 
         public override string LabelKey => "VUIE.ModCompat";
 
+        private const string FSM_ID = "kathanon.floatsubmenu";
+
+        private static bool fsmActive = false;
+        private static Type fsmMenuOption;
+        private static Type fsmSubMenu;
+
         public override void DoSettingsWindowContents(Rect inRect)
         {
             base.DoSettingsWindowContents(inRect);
@@ -52,6 +58,14 @@ namespace VUIE
                 Log.Message("[VUIE] Blueprints detected, activating compatibility patch...");
                 harm.Patch(AccessTools.Method(AccessTools.TypeByName("Blueprints.Designator_Blueprint"), "GroupsWith"),
                     finalizer: new HarmonyMethod(GetType(), nameof(GroupsWithFinalizer)));
+            }
+
+            if (ModLister.GetModWithIdentifier(FSM_ID).Active)
+            {
+                Log.Message("[VUIE] Float Sub-Menus detected, compatibility active");
+                fsmActive = true;
+                fsmMenuOption = AccessTools.TypeByName("FloatSubMenus.FloatSubMenu");
+                fsmSubMenu = AccessTools.TypeByName("FloatSubMenus.FloatSubMenu+FloatSubMenuInner");
             }
 
             LongEventHandler.ExecuteWhenFinished(() =>
@@ -120,6 +134,15 @@ namespace VUIE
         {
             UIMod.Instance.LateInit();
         }
+
+        public static bool IsSubMenu(FloatMenu menu) => 
+            fsmActive && menu.GetType() == fsmSubMenu;
+
+        public static bool IsSubMenuOption(FloatMenuOption opt) => 
+            fsmActive && opt.GetType() == fsmMenuOption;
+
+        public static List<FloatMenuOption> SubMenuOptions(FloatMenuOption opt) =>
+            IsSubMenuOption(opt) ? Traverse.Create(opt).Property<List<FloatMenuOption>>("Options").Value : null;
 
         public static Exception GroupsWithFinalizer(Exception __exception, ref bool __result)
         {
